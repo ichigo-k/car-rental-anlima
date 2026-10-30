@@ -1,0 +1,163 @@
+/* A restrained refinement of the Anlima design: variance 4, motion 3, density 4. */
+.hero-signature {
+  color: #886619;
+  position: relative;
+  white-space: nowrap;
+}
+.hero-signature::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 3px;
+  border-radius: 50%;
+  background: #b18a22;
+  opacity: 0.45;
+}
+.home-hero .design-hero-copy h1 {
+  margin-bottom: 25px;
+}
+.design-header > nav a {
+  position: relative;
+  padding-block: 8px;
+}
+.design-header > nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: #b18a22;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 180ms ease;
+}
+.design-header > nav a:hover::after,
+.design-header > nav a:focus-visible::after,
+.design-header > nav a[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+.design-hero-search .design-search {
+  border: 1px solid #fff;
+  box-shadow: 0 12px 40px #012d5a20;
+}
+.design-search label {
+  padding: 9px 7px;
+  border-radius: 10px;
+  transition:
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+.design-search label:focus-within {
+  background: #f0f6fc;
+  box-shadow: 0 0 0 2px #b18a22;
+}
+.design-search label:focus-within input,
+.design-search label:focus-within select {
+  background: transparent;
+}
+.design-search .button:disabled {
+  opacity: 0.8;
+  cursor: progress;
+}
+.journey-assurances {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 25px;
+  padding-block: 34px;
+  border-bottom: 1px solid #e7edf3;
+}
+.journey-assurances > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.journey-assurances > span > svg {
+  color: #886619;
+  flex: none;
+}
+.journey-assurances small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 400;
+  color: #667085;
+}
+.figma-home .design-fleet {
+  padding-top: 90px;
+}
+.design-vehicle {
+  border: 1px solid #e6ecf2;
+  box-shadow: 0 3px 16px #012d5a08;
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+.design-vehicle:hover,
+.design-vehicle:focus-visible {
+  border-color: #b18a2270;
+  box-shadow: 0 16px 35px #012d5a14;
+  transform: translateY(-5px);
+}
+.design-vehicle .vehicle-specs {
+  border-top: 1px solid #edf1f6;
+  padding-top: 13px;
+}
+.design-vehicle .card-book,
+.detailed-vehicle .card-book {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-radius: 7px;
+  transition: background 180ms ease;
+}
+.card-book svg {
+  transition: transform 180ms ease;
+}
+.design-vehicle:hover .card-book,
+.design-vehicle:focus-visible .card-book {
+  background: #074b7c;
+}
+.design-vehicle:hover .card-book svg,
+.design-vehicle:focus-visible .card-book svg {
+  transform: translate(2px, -2px);
+}
+.design-hero-copy .button svg {
+  transition: transform 180ms ease;
+}
+.design-hero-copy .button:hover svg {
+  transform: translateX(3px);
+}
+.faq-list summary:hover {
+  background: #074271;
+}
+.faq-list summary:focus-visible {
+  outline: 3px solid #b18a22;
+}
+@media (max-width: 760px) {
+  .journey-assurances {
+    padding-block: 25px;
+    gap: 20px;
+    grid-template-columns: 1fr;
+  }
+  .journey-assurances > span {
+    justify-content: flex-start;
+    padding-left: 10px;
+  }
+  .figma-home .design-fleet {
+    padding-top: 60px;
+  }
+  .design-search label {
+    padding: 5px 2px;
+  }
+  .home-hero .design-hero-copy h1 {
+    margin-bottom: 20px;
+  }
+}

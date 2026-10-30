@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+model ContactEnquiry {
+  id          String   @id @default(cuid())
+  reference   String   @unique
+  name        String
+  email       String
+  phone       String
+  subject     String
+  message     String
+  fingerprint String
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([fingerprint, createdAt])
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String      @id
+  name          String
+  email         String      @unique
+  emailVerified Boolean     @default(false)
+  image         String?
+  role          String      @default("CUSTOMER")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  bookings      Booking[]
+  favourites    Favourite[]
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Vehicle {
+  id           String         @id @default(cuid())
+  slug         String         @unique
+  name         String
+  category     String
+  seats        Int
+  transmission String         @default("Automatic")
+  fuel         String         @default("Petrol")
+  dailyRate    Int
+  deposit      Int            @default(150000)
+  image        String
+  description  String
+  status       String         @default("AVAILABLE")
+  bookings     Booking[]
+  blocks       VehicleBlock[]
+  pickupPoints String[]       @default(["Accra · Airport pickup", "Accra · City pickup"])
+  favourites   Favourite[]
+  createdAt    DateTime       @default(now())
+}
+
+model Favourite {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, vehicleId])
+  @@index([vehicleId])
+}
+
+model VehicleBlock {
+  id        String   @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  start     DateTime
+  end       DateTime
+  reason    String
+}
+
+model Booking {
+  id                 String       @id @default(cuid())
+  reference          String       @unique
+  userId             String
+  user               User         @relation(fields: [userId], references: [id])
+  vehicleId          String
+  vehicle            Vehicle      @relation(fields: [vehicleId], references: [id])
+  pickup             DateTime
+  returnAt           DateTime
+  location           String
+  phone              String
+  customerName       String?
+  customerEmail      String?
+  ghanaCardEncrypted String?
+  ghanaCardLast4     String?
+  licenceNumber      String
+  licenceExpiry      DateTime
+  status             String       @default("PENDING_PAYMENT")
+  days               Int
+  dailyRate          Int
+  rentalAmount       Int
+  deposit            Int
+  total              Int
+  discountAmount     Int          @default(0)
+  promotionId        String?
+  promotion          Promotion?   @relation(fields: [promotionId], references: [id], onDelete: SetNull)
+  promotionName      String?
+  couponCode         String?
+  termsVersion       String
+  termsAcceptedAt    DateTime
+  holdExpiresAt      DateTime
+  createdAt          DateTime     @default(now())
+  payments           Payment[]
+  inspections        Inspection[]
+
+  @@index([vehicleId, pickup, returnAt])
+  @@index([promotionId])
+}
+
+model Promotion {
+  id            String    @id @default(cuid())
+  name          String
+  code          String?   @unique
+  discountType  String
+  value         Int
+  vehicleIds    String[]  @default([])
+  minimumRental Int       @default(0)
+  maxUses       Int?
+  startsAt      DateTime
+  endsAt        DateTime
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  bookings      Booking[]
+}
+
+model Payment {
+  id         String    @id @default(cuid())
+  reference  String    @unique
+  bookingId  String
+  booking    Booking   @relation(fields: [bookingId], references: [id])
+  amount     Int
+  status     String    @default("PENDING")
+  provider   String    @default("PAYSTACK")
+  verifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+}
+
+model Inspection {
+  id              String   @id @default(cuid())
+  bookingId       String
+  booking         Booking  @relation(fields: [bookingId], references: [id])
+  kind            String
+  mileage         Int
+  fuel            String
+  condition       String
+  acknowledgement String
+  recordedBy      String
+  createdAt       DateTime @default(now())
+}
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  actorId   String
+  action    String
+  entityId  String
+  detail    String
+  createdAt DateTime @default(now())
+}

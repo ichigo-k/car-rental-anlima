@@ -1,0 +1,196 @@
+/* Original Anlima Figma styling; functional account and staff layouts remain. */
+body {
+  color: #012d5a;
+}
+h1,
+h2 {
+  letter-spacing: 0;
+}
+.button {
+  border-radius: 30px;
+}
+.design-header,
+.restored-hero .design-header {
+  max-width: 1440px;
+  height: 123px;
+  border: 0;
+  padding: 3px 40px 3px 31px;
+}
+.design-header .design-brand,
+.restored-hero .design-header .design-brand {
+  width: 235px;
+}
+.design-header > nav,
+.restored-hero .design-header > nav {
+  font-size: 16px;
+  gap: clamp(20px, 3vw, 50px);
+}
+.design-header .button {
+  font-size: 14px;
+  padding: 13px 28px;
+  min-height: 50px;
+}
+.customer-links {
+  gap: 16px;
+}
+.design-hero {
+  max-width: none;
+}
+.restored-hero .design-hero-copy {
+  max-width: 1440px;
+  margin-inline: auto;
+}
+.restored-hero .design-hero-copy h1 {
+  font-size: 56px;
+  line-height: 1.08;
+  margin-bottom: 15px;
+}
+.restored-hero .design-hero-copy p {
+  margin-bottom: 15px;
+}
+.restored-hero .design-hero-copy .button {
+  font-size: 16px;
+  padding: 13px 35px;
+}
+.design-hero-search {
+  max-width: 1360px;
+  margin-inline: auto;
+}
+.restored-hero .design-search label span {
+  font-size: 14px;
+  color: #012d5a;
+}
+.restored-hero .design-search .button {
+  border-radius: 20px;
+}
+.design-vehicle-photo {
+  height: auto;
+  background: white;
+  padding: 0;
+}
+.design-vehicle-photo .vehicle-image {
+  height: auto;
+  padding: 0;
+}
+.vehicle-category {
+  display: block;
+}
+.design-vehicle .favourite-control {
+  left: 12px;
+  right: auto;
+}
+.vehicle-description {
+  display: block;
+}
+.design-vehicle .vehicle-specs {
+  margin-top: 0;
+}
+.design-vehicle .vehicle-bottom {
+  margin-top: auto;
+}
+.design-vehicle .vehicle-bottom small {
+  color: #667085;
+}
+.design-vehicle .card-book {
+  border-radius: 5px;
+}
+.design-vehicle .card-book svg {
+  display: none;
+}
+.detailed-vehicle .vehicle-bottom {
+  margin-top: 0;
+}
+.design-footer .design-brand {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+.design-footer h3 {
+  color: #012d5a;
+}
+.design-footer-bottom > img {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+.design-faq {
+  min-height: 0;
+}
+.faq-list details {
+  border: 0;
+}
+.faq-list details[open] summary {
+  background: #012d5a;
+  color: white;
+}
+.faq-list summary:hover {
+  background: #064478;
+}
+.design-catalogue .fleet-search-panel {
+  margin-bottom: 30px;
+}
+.design-catalogue .filter-tabs {
+  background: transparent;
+  padding: 0;
+}
+.cars-hero .design-hero-copy {
+  max-width: 700px;
+}
+.cars-hero .design-hero-copy h1 {
+  line-height: 1.08;
+}
+.cars-hero .design-hero-copy p {
+  font-size: 18px;
+}
+@media (min-width: 1441px) {
+  .cars-hero .design-hero-copy {
+    margin-left: calc((100% - 1440px) / 2);
+  }
+}
+@media (max-width: 1100px) {
+  .design-header > nav,
+  .restored-hero .design-header > nav {
+    gap: 18px;
+    font-size: 13px;
+  }
+  .design-header .design-brand,
+  .restored-hero .design-header .design-brand {
+    width: 170px;
+  }
+}
+@media (max-width: 760px) {
+  .design-header,
+  .restored-hero .design-header {
+    height: 90px;
+    padding: 0 20px;
+    gap: 12px;
+  }
+  .design-header .design-brand,
+  .restored-hero .design-header .design-brand {
+    width: 145px;
+  }
+  .design-header .button {
+    min-height: 40px;
+    padding: 10px 16px;
+    font-size: 10px;
+  }
+  .restored-hero .design-hero-copy {
+    padding: 140px 22px 0;
+  }
+  .restored-hero .design-hero-copy h1 {
+    font-size: 36px;
+  }
+  .restored-hero .design-hero-copy p,
+  .cars-hero .design-hero-copy p {
+    font-size: 15px;
+  }
+  .restored-hero .design-search label span {
+    font-size: 12px;
+  }
+  .cars-hero {
+    min-height: 620px;
+  }
+  .design-footer-grid {
+    gap: 30px;
+  }
+}

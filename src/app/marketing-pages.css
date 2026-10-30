@@ -1,0 +1,850 @@
+.anlima-marketing-page {
+  color: #012d5a;
+}
+.anlima-marketing-page h1,
+.anlima-marketing-page h2,
+.anlima-marketing-page h3 {
+  letter-spacing: 0;
+}
+.anlima-marketing-page h2 {
+  font-size: 32px;
+  line-height: 1.3;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+.anlima-marketing-page .eyebrow {
+  font-size: 14px;
+  font-weight: 600;
+  color: #9b7719;
+  letter-spacing: 0;
+  margin-bottom: 15px;
+}
+.anlima-page-hero {
+  position: relative;
+  height: 805px;
+  overflow: hidden;
+  background: #eef3f6;
+}
+.anlima-page-hero > img {
+  object-fit: cover;
+  width: 106% !important;
+  height: 106% !important;
+  max-width: none;
+  left: -3% !important;
+  top: -3% !important;
+}
+.anlima-hero-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 1440px;
+  margin: auto;
+  padding: 220px 40px 0;
+}
+.anlima-hero-copy h1 {
+  font-size: 56px;
+  line-height: 1.08;
+  font-weight: 700;
+  margin: 0 0 20px;
+  max-width: 720px;
+}
+.anlima-hero-copy p {
+  max-width: 609px;
+  font-size: 18px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+.anlima-hero-copy .button {
+  font-size: 16px;
+  min-height: 50px;
+  padding: 13px 30px;
+}
+.how-page-hero > img {
+  width: 160.6% !important;
+  height: 160.6% !important;
+  left: -45.7% !important;
+  top: -5.5% !important;
+}
+.anlima-story {
+  margin-block: 100px;
+  background: #eaf5ff;
+}
+.anlima-story-inner {
+  max-width: 1440px;
+  margin: auto;
+  padding: 50px 40px;
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 65px;
+  align-items: center;
+  min-height: 778px;
+}
+.anlima-story-inner p {
+  font-size: 16px;
+  line-height: 1.65;
+  margin-bottom: 22px;
+}
+.anlima-story-photo {
+  position: relative;
+  height: 677px;
+  isolation: isolate;
+}
+.anlima-story-photo::before {
+  content: "";
+  position: absolute;
+  background: #012d5a;
+  inset: 40px 34px 40px -34px;
+  z-index: -1;
+}
+.anlima-story-photo img {
+  object-fit: cover;
+}
+.anlima-purpose {
+  padding-block: 0 100px;
+}
+.anlima-purpose-grid {
+  max-width: 1100px;
+  margin: 45px auto 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 70px;
+}
+.anlima-purpose-grid article {
+  background: #012d5a;
+  color: white;
+  border-radius: 15px;
+  padding: 28px 45px;
+  text-align: center;
+  min-height: 323px;
+}
+.anlima-purpose-grid article > img {
+  max-width: 100%;
+  height: 77px;
+  object-fit: contain;
+  margin: 0 auto 16px;
+}
+.anlima-purpose-grid h3 {
+  font-size: 28px;
+  line-height: 1.2;
+  margin: 0 0 15px;
+}
+.anlima-purpose-grid p {
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0;
+}
+.anlima-values {
+  position: relative;
+  min-height: 841px;
+  padding-block: 100px;
+  overflow: hidden;
+}
+.anlima-values > img {
+  object-fit: cover;
+  object-position: center;
+}
+.anlima-values > .design-container {
+  position: relative;
+}
+.anlima-values-intro {
+  max-width: 610px;
+  font-size: 16px;
+  margin-bottom: 35px;
+}
+.anlima-values-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 30px;
+  max-width: 1167px;
+}
+.anlima-values-grid article {
+  background: #f4f9ff;
+  border-radius: 10px;
+  padding: 22px 15px;
+  min-height: 213px;
+}
+.anlima-values-grid article > span {
+  background: #012d5a;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  width: 57px;
+  height: 57px;
+  margin-bottom: 15px;
+}
+.anlima-values-grid article > span img {
+  max-width: 38px;
+  max-height: 38px;
+}
+.anlima-values-grid h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+.anlima-values-grid p {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+.anlima-marketing-cta {
+  position: relative;
+  margin-block: 100px;
+  min-height: 501px;
+  overflow: hidden;
+  background: #eaf5ff;
+}
+.anlima-marketing-cta > img {
+  object-fit: cover;
+}
+.anlima-cta-inner {
+  max-width: 1440px;
+  position: relative;
+  margin: auto;
+  padding: 50px 47px;
+  min-height: inherit;
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+.anlima-cta-inner > div {
+  flex: 1;
+}
+.anlima-cta-inner > div > p:not(.eyebrow) {
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 638px;
+  margin-bottom: 20px;
+}
+.anlima-cta-inner > img {
+  flex: 1;
+  width: 49%;
+  height: auto;
+  min-width: 0;
+  object-fit: contain;
+}
+.anlima-cta-inner .button {
+  padding: 18px 35px;
+}
+.how-cta {
+  color: white;
+  min-height: 633px;
+}
+.how-cta::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #012d5af2;
+}
+.how-cta .anlima-cta-inner {
+  z-index: 1;
+  text-align: center;
+}
+.how-cta .anlima-cta-inner p {
+  margin-inline: auto;
+}
+.how-cta .button {
+  background: white;
+  color: #012d5a;
+  border-radius: 20px;
+}
+.contact-cta {
+  color: white;
+}
+.contact-cta .anlima-cta-inner > div {
+  flex: 0 1 610px;
+}
+.contact-cta .anlima-cta-inner p:not(.eyebrow) {
+  max-width: 520px;
+}
+.anlima-timeline {
+  background: radial-gradient(ellipse at center, #0061b7, #012d5a 75%);
+  color: white;
+  margin-top: 100px;
+  padding: 90px 0 100px;
+}
+.anlima-timeline .design-section-heading {
+  max-width: 1000px;
+}
+.anlima-timeline .design-section-heading h2,
+.anlima-timeline .design-section-heading > p:last-child {
+  color: white;
+}
+.anlima-timeline ol {
+  list-style: none;
+  padding: 0;
+  margin: 70px auto 0;
+  max-width: 1196px;
+  display: grid;
+  gap: 65px;
+}
+.anlima-timeline li {
+  display: grid;
+  grid-template-columns: 1fr 90px 1fr;
+  gap: 45px;
+  align-items: center;
+}
+.anlima-step-copy {
+  min-width: 0;
+}
+.anlima-step-copy h3 {
+  color: #e3b321;
+  font-weight: 600;
+  font-size: 24px;
+  margin: 0 0 20px;
+}
+.anlima-step-copy p {
+  font-size: 16px;
+  line-height: 1.7;
+  margin: 0 0 25px;
+}
+.anlima-step-copy .step-dots {
+  max-width: 100%;
+}
+.anlima-step-marker {
+  height: 425px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.anlima-step-marker span {
+  font-size: 14px;
+  color: #f0be1c;
+}
+.anlima-step-marker strong {
+  font-size: 54px;
+  font-weight: 700;
+  line-height: 1;
+}
+.anlima-step-marker > img {
+  max-height: 295px;
+  width: auto;
+  margin-top: 8px;
+}
+.anlima-step-photo {
+  width: 350px;
+  height: 350px;
+  max-width: 100%;
+  justify-self: center;
+  object-fit: contain;
+}
+.anlima-timeline li:nth-child(even) .anlima-step-photo {
+  grid-column: 1;
+  grid-row: 1;
+}
+.anlima-timeline li:nth-child(even) .anlima-step-copy {
+  grid-column: 3;
+  grid-row: 1;
+}
+.anlima-timeline li:nth-child(even) .anlima-step-marker {
+  grid-column: 2;
+  grid-row: 1;
+}
+.anlima-before-book {
+  padding-top: 100px;
+  overflow: hidden;
+}
+.anlima-before-inner {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 40px;
+  align-items: center;
+}
+.anlima-before-inner ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 45px;
+}
+.anlima-before-inner li {
+  display: flex;
+  gap: 25px;
+  align-items: flex-start;
+}
+.anlima-before-inner li > span {
+  background: #e9edf1;
+  color: #012d5a;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+.anlima-before-inner h3 {
+  font-size: 24px;
+  color: #a98216;
+  margin: 0 0 10px;
+}
+.anlima-before-inner p {
+  font-size: 15px;
+  line-height: 1.6;
+}
+.anlima-before-inner > div {
+  position: relative;
+  min-height: 650px;
+}
+.anlima-before-inner > div img {
+  object-fit: contain;
+  object-position: left center;
+}
+.anlima-contact-details {
+  background: #eaf5ff;
+  margin-top: 100px;
+  padding: 100px 0;
+}
+.anlima-contact-details > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 70px;
+  align-items: center;
+}
+.anlima-contact-details p {
+  font-size: 16px;
+  line-height: 1.6;
+}
+.anlima-contact-details dl {
+  display: grid;
+  gap: 30px;
+  margin: 40px 0 0;
+}
+.anlima-contact-details dl > div {
+  display: flex;
+  gap: 22px;
+}
+.contact-detail-icon {
+  display: grid;
+  place-items: center;
+  background: #012d5a;
+  border-radius: 10px;
+  width: 65px;
+  height: 59px;
+  flex-shrink: 0;
+}
+.contact-detail-icon img {
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+}
+.anlima-contact-details dt {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.anlima-contact-details dd {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 310px;
+}
+.anlima-contact-details dd strong {
+  display: block;
+  margin-top: 8px;
+  font-weight: 500;
+}
+.anlima-contact-photo {
+  position: relative;
+  height: 619px;
+  overflow: hidden;
+}
+.anlima-contact-photo img {
+  object-fit: cover;
+  object-position: 55% center;
+}
+.anlima-contact-form-section {
+  position: relative;
+  isolation: isolate;
+  padding: 90px 24px 130px;
+  margin-top: 100px;
+}
+.anlima-contact-form-section::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 auto;
+  height: 525px;
+  background: radial-gradient(ellipse at center, #137be9, #0055b5);
+}
+.contact-form-heading {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 50px;
+  color: white;
+}
+.contact-form-heading > p:last-child {
+  font-size: 16px;
+}
+.anlima-contact-form {
+  background: white;
+  padding: 40px;
+  max-width: 1020px;
+  margin: auto;
+  box-shadow: 0 12px 50px -3px #0004;
+  display: grid;
+  gap: 28px;
+}
+.anlima-contact-form label {
+  display: grid;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.anlima-contact-form input,
+.anlima-contact-form select,
+.anlima-contact-form textarea {
+  width: 100%;
+  padding: 20px 24px;
+  border: 1px solid #7890ab;
+  border-radius: 10px;
+  color: #012d5a;
+  background: white;
+  font: inherit;
+  font-weight: 400;
+}
+.anlima-contact-form textarea {
+  resize: vertical;
+  min-height: 230px;
+}
+.anlima-contact-form .button {
+  min-height: 75px;
+  border-radius: 15px;
+  font-size: 15px;
+}
+.anlima-contact-form :is(input, select, textarea):focus-visible {
+  outline: 3px solid #b18a22;
+  outline-offset: 3px;
+}
+.contact-honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.contact-form-success {
+  padding: 22px;
+  border-radius: 10px;
+  background: #eef7ee;
+  color: #235538;
+}
+.contact-form-success h3 {
+  margin: 0 0 10px;
+}
+.admin-enquiry-list {
+  display: grid;
+  gap: 20px;
+}
+.admin-enquiry-list h2 {
+  margin-top: 10px;
+}
+.admin-enquiry-list a {
+  text-decoration: underline;
+}
+.enquiry-message {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border-top: 1px solid #dce5ed;
+  padding-top: 20px;
+  margin-top: 20px;
+}
+@media (max-width: 1100px) {
+  .anlima-hero-copy h1 {
+    font-size: 45px;
+  }
+  .anlima-hero-copy p {
+    max-width: 49%;
+    font-size: 16px;
+  }
+  .anlima-story-inner,
+  .anlima-contact-details > div {
+    gap: 40px;
+  }
+  .anlima-purpose-grid {
+    gap: 30px;
+  }
+  .anlima-purpose-grid article {
+    padding: 28px;
+  }
+  .anlima-values-grid {
+    max-width: 90%;
+    gap: 18px;
+  }
+  .anlima-timeline li {
+    gap: 25px;
+  }
+  .anlima-step-copy h3 {
+    font-size: 22px;
+  }
+  .anlima-step-copy p {
+    font-size: 14px;
+  }
+  .anlima-step-photo {
+    width: 280px;
+    height: 280px;
+  }
+  .anlima-before-inner > div {
+    min-height: 500px;
+  }
+}
+@media (max-width: 760px) {
+  .anlima-marketing-page h2 {
+    font-size: 27px;
+  }
+  .anlima-marketing-page .eyebrow {
+    font-size: 12px;
+  }
+  .anlima-page-hero {
+    height: 690px;
+  }
+  .anlima-page-hero > img {
+    width: 150% !important;
+    height: 62% !important;
+    left: -50% !important;
+    top: 38% !important;
+    object-fit: cover;
+  }
+  .anlima-page-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 420px;
+    background: linear-gradient(#eef3f6 70%, transparent);
+    pointer-events: none;
+  }
+  .anlima-hero-copy {
+    padding: 135px 22px 0;
+  }
+  .anlima-hero-copy h1 {
+    font-size: 36px;
+  }
+  .anlima-hero-copy p {
+    max-width: 100%;
+    font-size: 15px;
+  }
+  .anlima-hero-copy .button {
+    font-size: 13px;
+    min-height: 44px;
+    padding: 12px 23px;
+  }
+  .how-page-hero .anlima-hero-copy h1 {
+    font-size: 32px;
+  }
+  .how-page-hero .anlima-hero-copy h1 br {
+    display: none;
+  }
+  .how-page-hero > img {
+    width: 150% !important;
+    left: -25% !important;
+  }
+  .anlima-story,
+  .anlima-marketing-cta {
+    margin-block: 50px;
+  }
+  .anlima-story-inner {
+    grid-template-columns: 1fr;
+    padding: 40px 22px;
+    gap: 25px;
+    min-height: 0;
+  }
+  .anlima-story-inner p {
+    font-size: 14px;
+  }
+  .anlima-story-photo {
+    height: 390px;
+    margin-left: 16px;
+  }
+  .anlima-story-photo::before {
+    left: -16px;
+  }
+  .anlima-purpose {
+    padding-bottom: 50px;
+  }
+  .anlima-purpose-grid {
+    grid-template-columns: 1fr;
+    margin-top: 30px;
+    gap: 20px;
+  }
+  .anlima-purpose-grid article {
+    min-height: 0;
+    padding: 30px 24px;
+  }
+  .anlima-purpose-grid h3 {
+    font-size: 24px;
+  }
+  .anlima-values {
+    padding-block: 50px;
+    min-height: 0;
+  }
+  .anlima-values > img {
+    opacity: 0.35;
+    object-position: right;
+  }
+  .anlima-values-grid {
+    grid-template-columns: 1fr 1fr;
+    max-width: 100%;
+    gap: 12px;
+  }
+  .anlima-values-grid article {
+    padding: 18px 14px;
+    min-height: 0;
+  }
+  .anlima-values-grid h3 {
+    font-size: 16px;
+  }
+  .anlima-values-grid p {
+    font-size: 12px;
+  }
+  .anlima-cta-inner {
+    padding: 40px 22px;
+    flex-direction: column;
+    gap: 30px;
+    align-items: stretch;
+  }
+  .anlima-cta-inner > img {
+    width: 100%;
+  }
+  .anlima-cta-inner > div > p:not(.eyebrow) {
+    font-size: 14px;
+  }
+  .anlima-cta-inner .button {
+    padding: 14px 25px;
+    font-size: 13px;
+  }
+  .anlima-marketing-cta {
+    min-height: 0;
+  }
+  .how-cta {
+    min-height: 380px;
+    display: flex;
+    align-items: center;
+  }
+  .contact-cta {
+    min-height: 440px;
+  }
+  .contact-cta .anlima-cta-inner > div {
+    flex-basis: auto;
+  }
+  .contact-cta > img {
+    object-position: 65% center;
+  }
+  .contact-cta::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: #012d5a99;
+    z-index: 1;
+  }
+  .contact-cta .anlima-cta-inner {
+    z-index: 2;
+  }
+  .anlima-timeline {
+    margin-top: 50px;
+    padding: 50px 0;
+  }
+  .anlima-timeline ol {
+    gap: 45px;
+    margin-top: 40px;
+  }
+  .anlima-timeline li {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .anlima-step-marker {
+    height: auto;
+    order: -2;
+    align-self: flex-start;
+    flex-direction: row;
+    align-items: baseline;
+  }
+  .anlima-step-marker strong {
+    font-size: 36px;
+  }
+  .anlima-step-marker > img {
+    display: none;
+  }
+  .anlima-step-photo {
+    order: -1;
+    width: 250px;
+    height: 250px;
+  }
+  .anlima-step-copy h3 {
+    font-size: 22px;
+  }
+  .anlima-step-copy p {
+    font-size: 14px;
+  }
+  .anlima-before-book {
+    padding-top: 50px;
+  }
+  .anlima-before-book > .design-section-heading {
+    padding-inline: 22px;
+  }
+  .anlima-before-inner {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .anlima-before-inner ol {
+    gap: 24px;
+  }
+  .anlima-before-inner li {
+    gap: 16px;
+  }
+  .anlima-before-inner h3 {
+    font-size: 20px;
+  }
+  .anlima-before-inner p {
+    font-size: 14px;
+  }
+  .anlima-before-inner > div {
+    min-height: 300px;
+  }
+  .anlima-contact-details {
+    margin-top: 50px;
+    padding-block: 45px;
+  }
+  .anlima-contact-details > div {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .anlima-contact-details p {
+    font-size: 14px;
+  }
+  .anlima-contact-details dl {
+    gap: 25px;
+  }
+  .anlima-contact-details dl > div {
+    gap: 16px;
+  }
+  .anlima-contact-photo {
+    height: 400px;
+  }
+  .anlima-contact-form-section {
+    margin-top: 50px;
+    padding: 45px 20px 20px;
+  }
+  .contact-form-heading {
+    margin-bottom: 30px;
+  }
+  .contact-form-heading > p:last-child {
+    font-size: 14px;
+  }
+  .anlima-contact-form {
+    padding: 25px 20px;
+    gap: 24px;
+  }
+  .anlima-contact-form input,
+  .anlima-contact-form select,
+  .anlima-contact-form textarea {
+    padding: 15px;
+    font-size: 16px;
+  }
+  .anlima-contact-form .button {
+    min-height: 55px;
+    font-size: 13px;
+  }
+}
