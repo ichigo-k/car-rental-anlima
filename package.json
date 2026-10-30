@@ -14,6 +14,7 @@
     "test:integration": "tsx scripts/smoke.ts",
     "test:promotions": "tsx scripts/promotions-smoke.ts",
     "test:contact": "tsx scripts/contact-smoke.ts",
+    "test:payments": "tsx scripts/payments-smoke.ts",
     "format": "prettier --write src scripts tests prisma/seed.ts docs"
   },
   "dependencies": {

@@ -4,10 +4,12 @@ import { CustomerShell } from "@/components/customer-shell";
 import { VehicleCard } from "@/components/vehicle-card";
 import { session } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { isStaffRole } from "@/lib/auth-redirect";
 export const dynamic = "force-dynamic";
 export default async function Favourites() {
   const current = await session();
   if (!current) redirect("/sign-in?next=/favourites");
+  if (isStaffRole(current.user.role)) redirect("/admin");
   const favourites = await db.favourite.findMany({
     where: { userId: current.user.id },
     include: { vehicle: true },

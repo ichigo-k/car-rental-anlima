@@ -21,7 +21,7 @@ export default function Policies() {
           ],
           [
             "Booking and payment",
-            "Daily rentals round partial days up. The quote separates rental charges and a refundable security deposit. A payment hold lasts 15 minutes. Reservations are confirmed only after Paystack verification and a final availability check.",
+            "Daily rentals round partial days up. The quote separates rental charges and a refundable security deposit. A payment hold lasts 15 minutes. Reservations are confirmed only after server-side payment verification and a final availability check.",
           ],
           [
             "Looking after your vehicle",
@@ -37,7 +37,7 @@ export default function Policies() {
           ],
           [
             "Privacy and tracking",
-            "We store your account, contact information, driver details, reservation, and payment reference to operate rentals. Ghana Card numbers are encrypted at rest and displayed masked. Staff check original identity and driving documents at pickup; entering a number does not verify it. Payment card information is handled by Paystack. GPS is currently simulated; future tracking disclosure and retention rules must be approved before integration. Access to driver and tracking records is restricted to authorised staff.",
+            "We store your account, contact information, driver details, reservation, and payment reference to operate rentals. Ghana Card numbers are encrypted at rest and displayed masked. Staff check original identity and driving documents at pickup; entering a number does not verify it. Payment card information is handled by your selected payment provider, Paystack or Flutterwave. GPS is currently simulated; future tracking disclosure and retention rules must be approved before integration. Access to driver and tracking records is restricted to authorised staff.",
           ],
         ].map(([title, text]) => (
           <section key={title}>

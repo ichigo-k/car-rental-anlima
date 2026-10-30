@@ -1,4 +1,5 @@
 import { requireStaff } from "@/lib/auth";
+import { paymentOptions } from "@/lib/payment-config";
 import { db } from "@/lib/db";
 import { money } from "@/lib/catalogue";
 export const dynamic = "force-dynamic";
@@ -21,13 +22,26 @@ export default async function Payments() {
       </div>
       <p className="muted">
         Latest 100 payment attempts. Only verified transactions are marked
-        successful.
+        successful. Payments marked SUCCESS_REVIEW need staff review for a
+        duplicate charge or refund; an existing confirmed rental stays reserved.
       </p>
+      <section
+        className="admin-payment-providers"
+        aria-label="Payment provider setup"
+      >
+        {paymentOptions().map((p) => (
+          <div className="admin-panel" key={p.id}>
+            <h2>{p.name}</h2>
+            <p>{p.enabled ? "Configured" : "Awaiting environment keys"}</p>
+          </div>
+        ))}
+      </section>
       <div className="admin-panel">
         <table className="data-table">
           <thead>
             <tr>
               <th>Payment reference</th>
+              <th>Provider</th>
               <th>Booking</th>
               <th>Amount</th>
               <th>Status</th>
@@ -38,6 +52,9 @@ export default async function Payments() {
             {payments.map((p) => (
               <tr key={p.id}>
                 <td>{p.reference}</td>
+                <td>
+                  {p.provider === "FLUTTERWAVE" ? "Flutterwave" : "Paystack"}
+                </td>
                 <td>{p.booking.reference}</td>
                 <td>{money(p.amount)}</td>
                 <td>{p.status}</td>

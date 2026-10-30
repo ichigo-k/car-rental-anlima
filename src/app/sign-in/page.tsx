@@ -1,6 +1,9 @@
 import { SignInForm } from "@/components/sign-in-form";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { session } from "@/lib/auth";
+import { accountDestination } from "@/lib/auth-redirect";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +13,8 @@ export default async function SignIn({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const q = await searchParams;
+  const current = await session();
+  if (current) redirect(accountDestination(current.user.role, q.next));
   return (
     <div className="auth-shell">
       {/* ── Left: photo + brand copy ── */}
@@ -38,10 +43,13 @@ export default async function SignIn({
           <div className="auth-left-copy">
             <p className="auth-eyebrow">THE ROAD IS CALLING</p>
             <h1 className="auth-headline">
-              Your next drive.<br />All in one place.
+              Your next drive.
+              <br />
+              All in one place.
             </h1>
             <p className="auth-tagline">
-              Save the cars you love. Reserve your next journey.<br />
+              Save the cars you love. Reserve your next journey.
+              <br />
               Pick up where you left off.
             </p>
           </div>

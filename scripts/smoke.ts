@@ -120,6 +120,20 @@ async function main() {
   });
   const historyHtml = await history.text();
   assert.ok(historyHtml.includes(created.reference));
+  assert.ok(historyHtml.includes("Choose how to pay"));
+  assert.ok(
+    historyHtml.includes("Paystack") && historyHtml.includes("Flutterwave"),
+  );
+  const forgedReceipt = await fetch(
+    `${base}/bookings?payment=verified&reference=${created.reference}`,
+    { headers: { Cookie: cookie } },
+  );
+  assert(
+    !(await forgedReceipt.text()).includes(
+      "Payment verified. Your reservation status",
+    ),
+    "URL parameters must not claim an unpaid reservation was paid",
+  );
   assert.ok(!historyHtml.includes("GHA-000000001-0"));
   assert.ok(
     !historyHtml.includes(created.ghanaCardEncrypted!),
@@ -153,7 +167,7 @@ async function main() {
       headers,
       body: JSON.stringify({ reference: created.reference }),
     });
-    assert.equal(checkout.status, 400);
+    assert.equal(checkout.status, 503);
     assert.match((await checkout.json()).error, /not configured/);
   }
   await db.booking.update({

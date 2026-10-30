@@ -3,18 +3,21 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { session } from "@/lib/auth";
 import { trustedOrigin } from "@/lib/request";
+import { isStaffRole } from "@/lib/auth-redirect";
 
 export async function GET() {
   const current = await session();
-  const favourites = current
-    ? await db.favourite.findMany({
-        where: { userId: current.user.id },
-        select: { vehicleId: true },
-      })
-    : [];
+  const favourites =
+    current && !isStaffRole(current.user.role)
+      ? await db.favourite.findMany({
+          where: { userId: current.user.id },
+          select: { vehicleId: true },
+        })
+      : [];
   return NextResponse.json(
     {
       authenticated: !!current,
+      role: current?.user.role ?? null,
       vehicleIds: favourites.map((f) => f.vehicleId),
     },
     { headers: { "Cache-Control": "private, no-store" } },

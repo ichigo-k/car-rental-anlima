@@ -102,7 +102,7 @@ export function Faq() {
           ],
           [
             "How can I pay for my car rental?",
-            "Review the full rental quote, then pay securely through Paystack using an available payment method. Your booking page will show the payment and confirmation status.",
+            "Review the full rental quote, then choose Paystack or Flutterwave and pay securely using an available card or Mobile Money option. Your booking page will show the payment and confirmation status.",
           ],
           [
             "Can I cancel or change my reservation?",

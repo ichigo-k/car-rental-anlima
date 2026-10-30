@@ -1,16 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { PaymentButton } from "./payment-button";
+import type { PaymentOption } from "@/lib/payment-options";
+import { PaymentButton, CheckPaymentButton } from "./payment-button";
 
 export function ReservationPayment({
   reference,
   expiresAt,
   slug,
+  providers,
 }: {
   reference: string;
   expiresAt: string;
   slug: string;
+  providers: PaymentOption[];
 }) {
   const [remaining, setRemaining] = useState<number | null>(null);
   useEffect(() => {
@@ -33,6 +36,10 @@ export function ReservationPayment({
         <Link href={`/fleet/${slug}`} className="button small">
           Check availability
         </Link>
+        <CheckPaymentButton
+          reference={reference}
+          enabled={providers.some((p) => p.enabled)}
+        />
       </div>
     );
   return (
@@ -58,7 +65,7 @@ export function ReservationPayment({
                 "0",
               )}:${(remaining % 60).toString().padStart(2, "0")}`}
       </strong>
-      <PaymentButton reference={reference} />
+      <PaymentButton reference={reference} providers={providers} />
       <small>
         The hold expires automatically. Confirmation follows verified payment.
       </small>

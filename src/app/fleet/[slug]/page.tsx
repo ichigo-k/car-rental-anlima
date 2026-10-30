@@ -1,9 +1,10 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Header, Footer } from "@/components/header";
 import { BookingForm } from "@/components/booking-form";
 import { db } from "@/lib/db";
 import { session } from "@/lib/auth";
+import { isStaffRole } from "@/lib/auth-redirect";
 import { FavouriteButton } from "@/components/favourites";
 import { VehicleImage } from "@/components/vehicle-image";
 import { money } from "@/lib/catalogue";
@@ -21,6 +22,7 @@ export default async function Detail({
   const car = await db.vehicle.findUnique({ where: { slug } });
   if (!car) notFound();
   const current = await session();
+  if (isStaffRole(current?.user.role)) redirect("/admin/fleet");
   return (
     <>
       <Header active="Cars" />

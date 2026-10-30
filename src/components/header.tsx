@@ -46,7 +46,7 @@ export function Header({
               {label}
             </Link>
           ))}
-          <Link href="/bookings">My bookings</Link>
+          <Link href="/auth/continue">My account</Link>
         </nav>
       </details>
       <AccountLinks />

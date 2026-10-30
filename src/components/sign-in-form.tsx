@@ -2,7 +2,7 @@
 import { createAuthClient } from "better-auth/react";
 import { useState } from "react";
 import { GoogleLogo, FacebookLogo } from "@phosphor-icons/react";
-import { safeAuthRedirect } from "@/lib/auth-redirect";
+import { safeAuthRedirect, authContinuation } from "@/lib/auth-redirect";
 const client = createAuthClient();
 export function SignInForm({
   providers = { google: false, facebook: false },
@@ -22,7 +22,7 @@ export function SignInForm({
     try {
       const result = await client.signIn.social({
         provider,
-        callbackURL: target,
+        callbackURL: authContinuation(target),
         errorCallbackURL: `/sign-in?error=social&next=${encodeURIComponent(target)}`,
       });
       if (result.error)
@@ -98,11 +98,14 @@ export function SignInForm({
               ? await client.signUp.email({
                   ...payload,
                   name: String(f.get("name")),
-                  callbackURL: target,
+                  callbackURL: authContinuation(target),
                 })
-              : await client.signIn.email({ ...payload, callbackURL: target });
+              : await client.signIn.email({
+                  ...payload,
+                  callbackURL: authContinuation(target),
+                });
             if (result.error) throw new Error(result.error.message);
-            window.location.assign(target);
+            window.location.assign(authContinuation(target));
           } catch (e) {
             setError((e as Error).message);
           } finally {

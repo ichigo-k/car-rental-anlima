@@ -5,7 +5,10 @@ import { ReservationPayment } from "@/components/reservation-payment";
 import { VehicleImage } from "@/components/vehicle-image";
 import { session } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { paymentOptions } from "@/lib/payment-config";
+import { paymentNoticeState } from "@/lib/payment-options";
 import { money } from "@/lib/catalogue";
+import { isStaffRole } from "@/lib/auth-redirect";
 export const dynamic = "force-dynamic";
 export default async function Bookings({
   searchParams,
@@ -14,13 +17,21 @@ export default async function Bookings({
 }) {
   const current = await session();
   if (!current) redirect("/sign-in?next=/bookings");
+  if (isStaffRole(current.user.role)) redirect("/admin");
   const bookings = await db.booking.findMany({
     where: { userId: current.user.id },
-    include: { vehicle: true },
+    include: { vehicle: true, payments: { select: { status: true } } },
     orderBy: { createdAt: "desc" },
   });
   const q = await searchParams;
   const now = new Date();
+  const providers = paymentOptions();
+  const paidBooking = bookings.find((b) => b.reference === q.reference);
+  const paymentState = paymentNoticeState(
+    paidBooking?.status,
+    paidBooking?.payments.some((p) => p.status === "SUCCESS_REVIEW") ?? false,
+    q.payment,
+  );
   const pending = bookings.filter(
     (b) => b.status === "PENDING_PAYMENT" && b.holdExpiresAt > now,
   );
@@ -75,12 +86,28 @@ export default async function Bookings({
             <Link href="/favourites">See favourite cars →</Link>
           </div>
         </div>
-        {q.reference && bookings.some((b) => b.reference === q.reference) && (
-          <p className="reservation-success" role="status">
-            Reservation saved. If payment is still pending, complete it within
-            the countdown below to confirm your car.
-          </p>
-        )}
+        {q.payment &&
+          ["verified", "pending", "review", "cancelled"].includes(
+            paymentState ?? "",
+          ) && (
+            <p className="reservation-success" role="status">
+              {paymentState === "verified"
+                ? "Payment verified. Your reservation status is shown below."
+                : paymentState === "review"
+                  ? "Payment received and flagged for staff review. Check your reservation status below and contact the rental team before paying again."
+                  : paymentState === "cancelled"
+                    ? "Checkout was cancelled. You can try again while your payment window is open."
+                    : "Payment has not been verified yet. If you have paid, use Check payment status below."}
+            </p>
+          )}
+        {!q.payment &&
+          q.reference &&
+          bookings.some((b) => b.reference === q.reference) && (
+            <p className="reservation-success" role="status">
+              Reservation saved. If payment is still pending, complete it within
+              the countdown below to confirm your car.
+            </p>
+          )}
         <div className="reservations-title" id="reservations">
           <h2>My reservations</h2>
           <Link className="text-link" href="/fleet">
@@ -173,6 +200,7 @@ export default async function Bookings({
                   {b.status === "PENDING_PAYMENT" && (
                     <ReservationPayment
                       reference={b.reference}
+                      providers={providers}
                       expiresAt={b.holdExpiresAt.toISOString()}
                       slug={b.vehicle.slug}
                     />

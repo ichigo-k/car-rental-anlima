@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import { verifyPayment } from "@/lib/paystack";
+import { paymentReturnUrl } from "@/lib/payment-status";
 export async function GET(req: Request) {
-  const url = new URL(req.url);
   try {
-    await verifyPayment(url.searchParams.get("reference") ?? "");
+    const result = await verifyPayment(
+      new URL(req.url).searchParams.get("reference") ?? "",
+    );
     return NextResponse.redirect(
-      new URL("/bookings?payment=verified", process.env.BETTER_AUTH_URL),
+      paymentReturnUrl(result.review ? "review" : "verified", result.reference),
     );
   } catch {
-    return NextResponse.redirect(
-      new URL("/bookings?payment=pending", process.env.BETTER_AUTH_URL),
-    );
+    return NextResponse.redirect(paymentReturnUrl("pending"));
   }
 }

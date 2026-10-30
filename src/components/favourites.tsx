@@ -9,8 +9,13 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Heart } from "@phosphor-icons/react";
+import { isStaffRole } from "@/lib/auth-redirect";
 
-type SavedState = { authenticated: boolean; vehicleIds: string[] };
+type SavedState = {
+  authenticated: boolean;
+  vehicleIds: string[];
+  role?: string | null;
+};
 const Context = createContext<{
   state: SavedState | null;
   change: (id: string, saved: boolean) => void;
@@ -31,6 +36,7 @@ export function FavouritesProvider({ children }: { children: ReactNode }) {
   function change(id: string, saved: boolean) {
     setState((s) => ({
       authenticated: true,
+      role: s?.role,
       vehicleIds: saved
         ? [...new Set([...(s?.vehicleIds ?? []), id])]
         : (s?.vehicleIds ?? []).filter((v) => v !== id),
@@ -42,6 +48,12 @@ export function FavouritesProvider({ children }: { children: ReactNode }) {
 }
 export function AccountLinks() {
   const { state } = useContext(Context);
+  if (isStaffRole(state?.role))
+    return (
+      <div className="customer-links">
+        <Link href="/admin">Dashboard</Link>
+      </div>
+    );
   return (
     <div className="customer-links">
       <Link href="/favourites" aria-label="Favourite cars">
@@ -66,6 +78,7 @@ export function FavouriteButton({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const saved = state?.vehicleIds.includes(vehicleId) ?? false;
+  if (isStaffRole(state?.role)) return null;
   return (
     <div className="favourite-control">
       <button
