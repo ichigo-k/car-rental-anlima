@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { displayPhone, smsNumber } from "@/lib/phone";
 export function VerifyAccount({
@@ -15,6 +15,7 @@ export function VerifyAccount({
   phoneVerified: boolean;
   next: string;
 }) {
+  const [emailConfirmed, setEmailConfirmed] = useState(emailVerified);
   const [emailSent, setEmailSent] = useState(false);
   const [codeSentTo, setCodeSentTo] = useState("");
   const [verifiedPhone, setVerifiedPhone] = useState(
@@ -33,12 +34,40 @@ export function VerifyAccount({
       setBusy(false);
     }
   }
-  const done = emailVerified && verifiedPhone;
+  const done = emailConfirmed && !!verifiedPhone;
+  // The email link usually opens in another tab or app, so check for the
+  // confirmation every few seconds and whenever this tab is shown again.
+  useEffect(() => {
+    if (emailConfirmed) return;
+    const check = async () => {
+      const r = await authClient.getSession();
+      if (r.data?.user.emailVerified) setEmailConfirmed(true);
+    };
+    const onVisible = () => {
+      if (!document.hidden) void check();
+    };
+    const timer = setInterval(() => {
+      if (!document.hidden) void check();
+    }, 5000);
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [emailConfirmed]);
+  // Both confirmed: carry on to where the customer was going.
+  useEffect(() => {
+    if (!done) return;
+    const timer = setTimeout(() => window.location.assign(next), 1500);
+    return () => clearTimeout(timer);
+  }, [done, next]);
   return (
     <div className="verify-steps">
-      <section className={emailVerified ? "verify-step done" : "verify-step"}>
+      <section className={emailConfirmed ? "verify-step done" : "verify-step"}>
         <h2>1. Email address</h2>
-        {emailVerified ? (
+        {emailConfirmed ? (
           <p>✓ {email} is confirmed.</p>
         ) : (
           <>
@@ -169,9 +198,12 @@ export function VerifyAccount({
         </p>
       )}
       {done && (
-        <a className="button" href={next}>
-          Continue
-        </a>
+        <>
+          <p role="status">All set. Taking you on…</p>
+          <a className="button" href={next}>
+            Continue
+          </a>
+        </>
       )}
     </div>
   );
