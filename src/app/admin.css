@@ -681,9 +681,11 @@
     width: 100%;
   }
   .admin-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
   }
   .admin-shell .sidebar {
+    min-width: 0;
     position: static;
     height: auto;
     padding: 14px 20px;

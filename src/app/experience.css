@@ -1571,7 +1571,7 @@ summary:focus-visible {
   }
 
   .reservation-page .detail-grid {
-    grid-template-columns: 1fr 1.1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
     gap: 22px;
   }
 
@@ -1829,7 +1829,7 @@ summary:focus-visible {
   }
 
   .reservation-page .detail-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 25px;
   }
 

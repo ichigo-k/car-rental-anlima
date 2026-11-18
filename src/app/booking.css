@@ -417,7 +417,7 @@
     margin-left: auto;
   }
   .reservation-page .detail-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .reservation-car-photo img {
     height: 320px;
@@ -647,6 +647,13 @@
   font: inherit;
   color: inherit;
 }
+/* Space the tour button like the footer links beside it. */
+.design-footer-grid > div > .footer-tour {
+  display: block;
+  font-size: 14px;
+  font-weight: inherit;
+  margin-bottom: 14px;
+}
 @keyframes tour-in {
   from {
     transform: translateY(16px);
@@ -666,6 +673,8 @@
   }
 }
 .tour-cta { text-align: center; margin: 10px 0 40px; }
+/* The tour button's label is long; let it wrap on small phones. */
+.tour-cta .button { max-width: 100%; white-space: normal; line-height: 1.3; }
 .review-form {
   margin-top: 12px;
 }
