@@ -7,8 +7,13 @@ export async function GET(req: Request) {
   const destination = current
     ? accountDestination(current.user.role, next)
     : `/sign-in?next=${encodeURIComponent(next)}`;
-  return NextResponse.redirect(new URL(destination, req.url), {
-    status: 307,
-    headers: { "Cache-Control": "private, no-store" },
-  });
+  // Behind the proxy req.url is the app's internal address (127.0.0.1:3100),
+  // so redirect on the public one.
+  return NextResponse.redirect(
+    new URL(destination, process.env.BETTER_AUTH_URL),
+    {
+      status: 307,
+      headers: { "Cache-Control": "private, no-store" },
+    },
+  );
 }
