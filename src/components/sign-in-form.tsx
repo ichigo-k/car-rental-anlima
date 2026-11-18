@@ -170,10 +170,8 @@ export function SignInForm({
               ? await client.signUp.email({
                   ...payload,
                   name: String(f.get("name")),
-                  // The email link returns to the verify page to finish setup.
-                  callbackURL: authContinuation(
-                    `/account/verify?next=${encodeURIComponent(target)}`,
-                  ),
+                  // The email link opens a short "Email confirmed" page.
+                  callbackURL: `/account/email-confirmed?next=${encodeURIComponent(target)}`,
                 })
               : await client.signIn.email({
                   ...payload,

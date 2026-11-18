@@ -83,7 +83,7 @@ export function VerifyAccount({
                 run(async () => {
                   const r = await authClient.sendVerificationEmail({
                     email,
-                    callbackURL: `/account/verify?next=${encodeURIComponent(next)}`,
+                    callbackURL: `/account/email-confirmed?next=${encodeURIComponent(next)}`,
                   });
                   if (r.error)
                     throw new Error(
