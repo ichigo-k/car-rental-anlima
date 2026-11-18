@@ -6,7 +6,10 @@ cd /var/www/anlima
 export PATH=/opt/node22/bin:$PATH
 git pull --ff-only
 npm ci
-npx prisma migrate deploy
+# Migrations take a lock that Neon's pooled connection cannot hold, so they
+# use the direct connection (the same address without "-pooler").
+url=$(grep -E '^DATABASE_URL=' .env | tail -1 | cut -d= -f2- | tr -d "\"'\r")
+DATABASE_URL="${url/-pooler./.}" npx prisma migrate deploy
 npm run build
 pm2 startOrReload deploy/ecosystem.config.cjs --update-env
 pm2 save
