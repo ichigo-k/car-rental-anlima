@@ -222,6 +222,14 @@ h3 {
   color: #52657a;
   pointer-events: none;
 }
+.design-search .date-field span.date-hint::after {
+  content: "Select date & time";
+}
+@media (max-width: 400px) {
+  .design-search .date-field span.date-hint::after {
+    content: "Select date";
+  }
+}
 .design-search .date-field:not(.has-value) input:not(:focus) {
   color: transparent;
 }

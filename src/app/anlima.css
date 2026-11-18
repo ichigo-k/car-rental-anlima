@@ -272,3 +272,70 @@ h2 {
   align-items: flex-start;
   gap: 15px;
 }
+/* Homepage hero. On larger screens the photo fills the hero behind the text;
+   on phones the text comes first, the whole car sits below it, and the
+   search box floats over the bottom of the photo. */
+.restored-hero .design-hero-media {
+  position: absolute;
+  inset: 0;
+}
+@media (max-width: 760px) {
+  .restored-hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    height: auto;
+    min-height: 0;
+    padding-bottom: 28px;
+  }
+  .restored-hero.home-hero::after {
+    display: none;
+  }
+  .restored-hero .design-hero-copy {
+    order: 1;
+    padding: 108px 20px 0;
+  }
+  .restored-hero .design-hero-copy h1 {
+    font-size: 34px;
+    line-height: 1.12;
+    margin-bottom: 12px;
+  }
+  .restored-hero .design-hero-copy p {
+    font-size: 15px;
+    margin-bottom: 18px;
+  }
+  .restored-hero .design-hero-media {
+    order: 2;
+    position: relative;
+    inset: auto;
+    height: min(80vw, 340px);
+    margin-top: 4px;
+  }
+  /* Fade the sky into the page background. */
+  .restored-hero .design-hero-media::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 35%;
+    background: linear-gradient(#eaf5ff, #eaf5ff00);
+    z-index: 1;
+  }
+  .restored-hero.home-hero .design-hero-photo {
+    width: 100% !important;
+    height: 100% !important;
+    left: 0 !important;
+    top: 0 !important;
+    object-fit: cover;
+    object-position: 50% 42%;
+  }
+  .restored-hero .design-hero-search {
+    order: 3;
+    position: relative;
+    inset: auto;
+    margin: -64px 16px 0;
+    z-index: 3;
+  }
+  .restored-hero .design-search {
+    box-shadow: 0 12px 32px #012d5a1f;
+  }
+}

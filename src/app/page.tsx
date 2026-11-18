@@ -33,14 +33,16 @@ export default async function Home() {
         <section
           className={`design-hero home-hero restored-hero ${heroFont.className}`}
         >
-          <Image
-            className="design-hero-photo"
-            src="/images/figma/home-imgEnhanceThisImage2K20261006134800Photoroom1.png"
-            alt="Silver Mercedes SUV on an open road"
-            fill
-            preload
-            sizes="(max-width: 760px) 180vw, 125vw"
-          />
+          <div className="design-hero-media">
+            <Image
+              className="design-hero-photo"
+              src="/images/figma/home-imgEnhanceThisImage2K20261006134800Photoroom1.png"
+              alt="Silver Mercedes SUV on an open road"
+              fill
+              preload
+              sizes="(max-width: 760px) 100vw, 125vw"
+            />
+          </div>
           <Header overlay active="Home" />
           <div className="design-hero-copy">
             <h1>Drive With Confidence.</h1>

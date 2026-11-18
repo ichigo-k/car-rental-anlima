@@ -24,9 +24,8 @@ function DateField({
         onInput={(e) => setFilled(!!e.currentTarget.value)}
         onChange={(e) => setFilled(!!e.currentTarget.value)}
       />
-      <span className="date-hint" aria-hidden="true">
-        Select date &amp; time
-      </span>
+      {/* Text comes from CSS so small phones can show a shorter hint. */}
+      <span className="date-hint" aria-hidden="true" />
     </div>
   );
 }
