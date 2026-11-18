@@ -7,10 +7,13 @@ import { SearchForm } from "@/components/search-form";
 import { VehicleCard } from "@/components/vehicle-card";
 import {
   Faq,
+  RentalSteps,
   RoadBanner,
   SectionHeading,
 } from "@/components/marketing-sections";
 import { db } from "@/lib/db";
+import { Testimonials } from "@/components/testimonials";
+import { publicReviews } from "@/lib/reviews";
 export const dynamic = "force-dynamic";
 const heroFont = Poppins({
   subsets: ["latin"],
@@ -18,6 +21,7 @@ const heroFont = Poppins({
   display: "swap",
 });
 export default async function Home() {
+  const reviews = await publicReviews(db);
   const fleet = await db.vehicle.findMany({
     where: { status: "AVAILABLE" },
     orderBy: { dailyRate: "asc" },
@@ -48,7 +52,7 @@ export default async function Home() {
               BOOK A CAR
             </Link>
           </div>
-          <div className="design-hero-search">
+          <div className="design-hero-search" data-tour="search">
             <SearchForm />
           </div>
         </section>
@@ -60,12 +64,12 @@ export default async function Home() {
             Explore our selection of vehicles designed to make every journey
             comfortable, convenient and reliable.
           </SectionHeading>
-          <div className="view-all">
+          <div className="view-all" data-tour="view-all">
             <Link href="/fleet">
               View All Cars <ArrowRight size={16} />
             </Link>
           </div>
-          <div className="fleet-grid">
+          <div className="fleet-grid" data-tour="fleet">
             {fleet.map((car) => (
               <VehicleCard car={car} key={car.id} />
             ))}
@@ -129,7 +133,9 @@ export default async function Home() {
             </div>
           </div>
         </section>
+        <RentalSteps />
         <RoadBanner />
+        <Testimonials reviews={reviews} />
         <Faq />
       </main>
       <Footer />

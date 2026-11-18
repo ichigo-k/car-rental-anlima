@@ -41,9 +41,13 @@ export function CheckPaymentButton({
                 "Payment is not verified yet. If you have paid, wait a moment and check again.",
               );
             else if (
-              ["CONFIRMED", "ACTIVE", "COMPLETED", "PAYMENT_REVIEW"].includes(
-                result.status,
-              )
+              [
+                "CONFIRMED",
+                "CHECKED_OUT",
+                "RETURNED",
+                "CLOSED",
+                "PAYMENT_REVIEW",
+              ].includes(result.status)
             )
               router.replace(
                 `/bookings?payment=${result.status === "PAYMENT_REVIEW" ? "review" : "verified"}&reference=${encodeURIComponent(reference)}`,

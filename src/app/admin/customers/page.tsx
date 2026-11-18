@@ -1,9 +1,10 @@
 import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { can } from "@/lib/permissions";
 export const dynamic = "force-dynamic";
 export default async function Customers() {
   const current = await requireStaff();
-  if (!["ADMIN", "MANAGER", "AGENT"].includes(current.user.role))
+  if (!can(current.user.role, "customer.read"))
     return <p>Customer access required.</p>;
   const customers = await db.user.findMany({
     where: { role: "CUSTOMER" },

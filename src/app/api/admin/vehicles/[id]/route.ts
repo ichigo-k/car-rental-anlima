@@ -3,14 +3,20 @@ import { z } from "zod";
 import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { pickupPointsInput } from "@/lib/reservation";
-import { vehicleInput } from "@/lib/request";
+import {
+  driverRateIssue,
+  VEHICLE_CATEGORIES,
+  vehicleImageInput,
+  vehiclePricingPatch,
+} from "@/lib/vehicle-options";
+import { can } from "@/lib/permissions";
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const current = await requireStaff();
-    if (!["ADMIN", "MANAGER", "FLEET"].includes(current.user.role))
+    if (!can(current.user.role, "vehicle.write"))
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     if (
       req.headers.get("origin") !== new URL(process.env.BETTER_AUTH_URL!).origin
@@ -22,13 +28,16 @@ export async function PATCH(
         deposit: z.number().int().nonnegative().max(100000000),
         status: z.enum(["AVAILABLE", "MAINTENANCE", "INACTIVE"]),
         pickupPoints: pickupPointsInput.optional(),
-        name: vehicleInput.shape.name.optional(),
-        category: vehicleInput.shape.category.optional(),
-        seats: vehicleInput.shape.seats.optional(),
-        image: vehicleInput.shape.image.optional(),
-        description: vehicleInput.shape.description.optional(),
+        name: z.string().min(3).max(120).optional(),
+        category: z.enum(VEHICLE_CATEGORIES).optional(),
+        seats: z.number().int().min(2).max(15).optional(),
+        image: vehicleImageInput.optional(),
+        description: z.string().min(10).max(2000).optional(),
       })
+      .merge(vehiclePricingPatch)
       .parse(await req.json());
+    const issue = driverRateIssue(data);
+    if (issue) return NextResponse.json({ error: issue }, { status: 400 });
     const { id } = await params;
     await db.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM "Vehicle" WHERE id = ${id} FOR UPDATE`;

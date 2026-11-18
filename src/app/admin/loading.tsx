@@ -7,7 +7,10 @@ export default function Loading() {
         <div>
           <div className="skeleton sk-eyebrow" />
           <div className="skeleton skeleton-title" style={{ width: "55%" }} />
-          <div className="skeleton skeleton-subtitle" style={{ width: "70%" }} />
+          <div
+            className="skeleton skeleton-subtitle"
+            style={{ width: "70%" }}
+          />
         </div>
         <div className="skeleton sk-admin-btn" />
       </div>

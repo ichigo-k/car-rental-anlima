@@ -38,13 +38,19 @@ export default function Loading() {
                 <div key={n} className="skeleton sk-spec-chip" />
               ))}
             </div>
-            <div className="skeleton skeleton-line" style={{ marginTop: 24, width: "55%" }} />
+            <div
+              className="skeleton skeleton-line"
+              style={{ marginTop: 24, width: "55%" }}
+            />
             <div className="skeleton skeleton-line short" />
           </div>
 
           {/* Right: booking panel */}
           <div className="skeleton-panel sk-booking-panel">
-            <div className="skeleton skeleton-subtitle" style={{ width: "50%" }} />
+            <div
+              className="skeleton skeleton-subtitle"
+              style={{ width: "50%" }}
+            />
             {[1, 2, 3, 4].map((n) => (
               <div key={n} className="skeleton skeleton-field" />
             ))}

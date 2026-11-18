@@ -3,9 +3,11 @@ import { z } from "zod";
 import { session } from "@/lib/auth";
 import { trustedOrigin } from "@/lib/request";
 import { db } from "@/lib/db";
-import { quote } from "@/lib/pricing";
+import { priceRental, PricingError } from "@/lib/pricing";
+import { getFees } from "@/lib/fees";
+import { rentalOptionsInput } from "@/lib/reservation";
 import { CouponError, promotionQuote } from "@/lib/promotions";
-const input = z.object({
+const input = rentalOptionsInput.extend({
   vehicleId: z.string().min(1).max(128),
   pickup: z.iso.datetime(),
   returnAt: z.iso.datetime(),
@@ -42,23 +44,34 @@ export async function POST(req: Request) {
         { error: "Choose a future pickup time." },
         { status: 400 },
       );
-    const base = quote(pickup, end, car.dailyRate, car.deposit);
+    const base = priceRental(pickup, end, car, v, await getFees(db));
     const offer = await promotionQuote(
       db,
       car.id,
-      base.rentalAmount,
+      base.rentalAmount - base.durationDiscount,
       v.couponCode,
       new Date(),
     );
+    const items = offer.discountAmount
+      ? [
+          ...base.items.slice(0, -1),
+          {
+            kind: "PROMOTION",
+            label: offer.promotionName ?? "Offer",
+            amount: -offer.discountAmount,
+          },
+          base.items.at(-1)!,
+        ]
+      : base.items;
     return NextResponse.json(
-      { ...base, ...offer, total: base.total - offer.discountAmount },
+      { ...base, ...offer, items, total: base.total - offer.discountAmount },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (e) {
     return NextResponse.json(
       {
         error:
-          e instanceof CouponError
+          e instanceof CouponError || e instanceof PricingError
             ? e.message
             : "Could not check the quote. Review your dates and try again.",
       },

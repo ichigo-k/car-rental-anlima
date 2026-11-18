@@ -2,10 +2,11 @@ import { requireStaff } from "@/lib/auth";
 import { paymentOptions } from "@/lib/payment-config";
 import { db } from "@/lib/db";
 import { money } from "@/lib/catalogue";
+import { can } from "@/lib/permissions";
 export const dynamic = "force-dynamic";
 export default async function Payments() {
   const current = await requireStaff();
-  if (!["ADMIN", "MANAGER", "FINANCE"].includes(current.user.role))
+  if (!can(current.user.role, "payment.review"))
     return <p>Finance access required.</p>;
   const payments = await db.payment.findMany({
     include: { booking: true },

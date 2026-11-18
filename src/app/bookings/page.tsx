@@ -2,6 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CustomerShell } from "@/components/customer-shell";
 import { ReservationPayment } from "@/components/reservation-payment";
+import { CancelBooking } from "@/components/cancel-booking";
+import { ReviewForm } from "@/components/review-form";
+import { REVIEWABLE_STATUSES, shortName } from "@/lib/reviews";
 import { VehicleImage } from "@/components/vehicle-image";
 import { session } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -20,7 +23,11 @@ export default async function Bookings({
   if (isStaffRole(current.user.role)) redirect("/admin");
   const bookings = await db.booking.findMany({
     where: { userId: current.user.id },
-    include: { vehicle: true, payments: { select: { status: true } } },
+    include: {
+      vehicle: true,
+      payments: { select: { status: true } },
+      review: { select: { status: true } },
+    },
     orderBy: { createdAt: "desc" },
   });
   const q = await searchParams;
@@ -37,7 +44,7 @@ export default async function Bookings({
   );
   const isHistory = (b: (typeof bookings)[number]) =>
     b.returnAt < now ||
-    ["CANCELLED", "COMPLETED"].includes(b.status) ||
+    ["CANCELLED", "RETURNED", "CLOSED", "NO_SHOW"].includes(b.status) ||
     (b.status === "PENDING_PAYMENT" && b.holdExpiresAt <= now);
   const view = ["upcoming", "history"].includes(q.view ?? "") ? q.view : "all";
   const visible = bookings.filter((b) =>
@@ -204,6 +211,35 @@ export default async function Bookings({
                       expiresAt={b.holdExpiresAt.toISOString()}
                       slug={b.vehicle.slug}
                     />
+                  )}
+                  {REVIEWABLE_STATUSES.includes(b.status) &&
+                    (b.review ? (
+                      <p className="muted">
+                        {b.review.status === "PENDING"
+                          ? "Thank you for your review. It will appear once checked."
+                          : "Thank you for your review."}
+                      </p>
+                    ) : (
+                      <ReviewForm
+                        reference={b.reference}
+                        defaultName={shortName(
+                          b.customerName ?? current.user.name,
+                        )}
+                      />
+                    ))}
+                  {b.status === "CONFIRMED" && b.cancelRequestedAt ? (
+                    <p className="muted">
+                      Cancellation requested. Our team will contact you.
+                    </p>
+                  ) : (
+                    ((b.status === "PENDING_PAYMENT" &&
+                      b.holdExpiresAt > now) ||
+                      (b.status === "CONFIRMED" && b.pickup > now)) && (
+                      <CancelBooking
+                        reference={b.reference}
+                        paid={b.status === "CONFIRMED"}
+                      />
+                    )
                   )}
                 </div>
               </article>

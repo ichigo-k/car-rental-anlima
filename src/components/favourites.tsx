@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Heart } from "@phosphor-icons/react";
 import { isStaffRole } from "@/lib/auth-redirect";
+import { SignOut } from "./sign-out";
 
 type SavedState = {
   authenticated: boolean;
@@ -52,6 +53,7 @@ export function AccountLinks() {
     return (
       <div className="customer-links">
         <Link href="/admin">Dashboard</Link>
+        <SignOut />
       </div>
     );
   return (
@@ -63,6 +65,7 @@ export function AccountLinks() {
       <Link href={state?.authenticated ? "/bookings" : "/sign-in"}>
         {state?.authenticated ? "My account" : "Sign in"}
       </Link>
+      {state?.authenticated && <SignOut />}
     </div>
   );
 }

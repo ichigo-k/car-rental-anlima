@@ -194,3 +194,81 @@ h2 {
     gap: 30px;
   }
 }
+/* Top navigation, Figma node 33:6. */
+@media (min-width: 1151px) {
+  .design-header,
+  .restored-hero .design-header {
+    gap: 24px;
+  }
+  .design-header > nav,
+  .restored-hero .design-header > nav {
+    margin-inline: auto;
+    gap: clamp(20px, 3.2vw, 64px);
+    white-space: nowrap;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .design-header nav a {
+    color: #012d5a;
+  }
+  .design-header nav a[aria-current="page"] {
+    color: #b18a22;
+  }
+  .design-header .button,
+  .restored-hero .design-header .button {
+    width: 169px;
+    min-height: 50px;
+    padding: 13px 0;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
+/* Sign in / My account beside BOOK A CAR; phones use the Menu instead. */
+.design-header .customer-links .text-link {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.design-header .customer-links .text-link:hover {
+  color: #886619;
+}
+.design-header .header-account .customer-links {
+  font-size: 15px;
+  font-weight: 500;
+  color: #012d5a;
+}
+@media (max-width: 1100px) {
+  .design-header > nav,
+  .design-header .header-account .customer-links {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+}
+@media (min-width: 901px) and (max-width: 1000px) {
+  .design-header,
+  .restored-hero .design-header {
+    padding-inline: 20px;
+    gap: 14px;
+  }
+  .design-header > nav,
+  .restored-hero .design-header > nav {
+    gap: 14px;
+  }
+  .design-header .header-account .customer-links {
+    gap: 12px;
+  }
+  .design-header .button {
+    padding: 12px 18px;
+  }
+}
+@media (max-width: 900px) {
+  .design-header .header-account {
+    display: none;
+  }
+}
+.design-header .mobile-nav .customer-links {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 15px;
+}

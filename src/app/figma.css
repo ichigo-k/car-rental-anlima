@@ -668,9 +668,33 @@ h3 {
   color: #667085;
   margin-bottom: 16px;
 }
-.vehicle-rate {
-  font-weight: 600;
-  font-size: 14px;
+.vehicle-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.vehicle-title-row h3 {
+  margin: 0;
+}
+.vehicle-pill {
+  flex: none;
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: #002a52;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.vehicle-info .vehicle-deposit {
+  color: #f80004;
+  font-size: 12px;
+  font-weight: 500;
   margin-top: auto;
   margin-bottom: 16px;
 }
@@ -680,9 +704,13 @@ h3 {
 }
 .detailed-vehicle .card-book {
   display: block;
-  padding: 10px;
+  padding: 16px 10px;
   text-align: center;
-  border-radius: 0;
+  border-radius: 5px;
+  font-size: 14px;
+}
+.detailed-vehicle .card-book svg {
+  display: none;
 }
 .design-featured {
   background: #dbedff;
@@ -697,6 +725,9 @@ h3 {
 .design-featured > div > .button {
   margin-top: 40px;
   border-radius: 20px;
+  gap: 10px;
+  padding: 31px 63px;
+  font-weight: 400;
 }
 .design-confidence {
   position: relative;
@@ -744,7 +775,7 @@ h3 {
   border-radius: 15px;
 }
 .design-testimonials {
-  background: #c5dff9;
+  background: #bbdbfc;
   margin-top: 100px;
   padding: 117px 0 85px;
   overflow: hidden;
@@ -764,7 +795,8 @@ h3 {
   background: #97c7fd;
   border-radius: 10px;
   scroll-snap-align: center;
-  color: #012d5a;
+  color: #fff;
+  letter-spacing: 0.04em;
 }
 .testimonial-track figure > img {
   width: 80px;
@@ -782,7 +814,9 @@ h3 {
   font-size: 14px;
 }
 .testimonial-track figcaption > span {
-  background: #fff;
+  flex: none;
+  background: url("/images/figma/cars-imgEllipse13.svg") center / 100% 100%;
+  color: #97c7fd;
   border-radius: 50%;
   width: 54px;
   height: 54px;
@@ -794,6 +828,7 @@ h3 {
 .testimonial-track small {
   display: block;
   font-size: 12px;
+  color: #fdfdfd;
 }
 .testimonial-controls {
   display: flex;
@@ -1241,4 +1276,12 @@ h3 {
     background: linear-gradient(#eaf5ff, #eaf5ff00);
     height: 340px;
   }
+}
+.testimonial-stars {
+  color: #e4b23a;
+  font-size: 16px;
+  letter-spacing: 2px;
+}
+.testimonial-stars > span {
+  color: rgba(255, 255, 255, 0.45);
 }

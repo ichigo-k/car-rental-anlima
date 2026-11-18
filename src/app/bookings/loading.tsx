@@ -3,7 +3,11 @@ import { Header } from "@/components/header";
 /** Bookings / account page skeleton — sidebar shell + 3 summary tiles + booking rows */
 export default function Loading() {
   return (
-    <div className="customer-workspace" aria-busy="true" aria-label="Loading your account">
+    <div
+      className="customer-workspace"
+      aria-busy="true"
+      aria-label="Loading your account"
+    >
       {/* Sidebar */}
       <aside className="sk-sidebar" aria-hidden="true">
         <div className="skeleton sk-sidebar-logo" />
@@ -33,7 +37,11 @@ export default function Loading() {
         </div>
 
         {/* Section title + tabs */}
-        <div className="skeleton skeleton-line" style={{ width: "22%", marginBottom: 14 }} aria-hidden="true" />
+        <div
+          className="skeleton skeleton-line"
+          style={{ width: "22%", marginBottom: 14 }}
+          aria-hidden="true"
+        />
         <div className="sk-filter-tabs" aria-hidden="true">
           {[1, 2, 3].map((n) => (
             <div key={n} className="skeleton sk-tab" style={{ width: 110 }} />

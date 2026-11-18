@@ -55,7 +55,14 @@ export async function promotionQuote(
           OR: [
             {
               status: {
-                in: ["CONFIRMED", "ACTIVE", "COMPLETED", "PAYMENT_REVIEW"],
+                in: [
+                  "CONFIRMED",
+                  "CHECKED_OUT",
+                  "RETURNED",
+                  "CLOSED",
+                  "NO_SHOW",
+                  "PAYMENT_REVIEW",
+                ],
               },
             },
             { status: "PENDING_PAYMENT", holdExpiresAt: { gt: now } },

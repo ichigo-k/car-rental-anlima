@@ -20,6 +20,10 @@ export default function Policies() {
             "Bring your valid driving licence and identification. Your licence must remain valid throughout the rental. Only authorised drivers may drive the vehicle. Staff will verify documents at pickup.",
           ],
           [
+            "Rates and charges",
+            "A daily rate covers up to 24 hours from the agreed pickup time. Fuel is not included: return the car at the agreed fuel level. A refundable security deposit is required before handover. Rentals of 3 days or more are discounted automatically. Mileage allowances and travel areas are stated in your quote; travel outside Accra, commercial site work and poor-road use need prior approval and may be priced separately. Rates may rise during peak periods, major events and holidays. Premium vehicles such as the Mercedes-Benz and Toyota Tundra need stricter verification and a higher deposit. All rates depend on availability and the final signed rental agreement.",
+          ],
+          [
             "Booking and payment",
             "Daily rentals round partial days up. The quote separates rental charges and a refundable security deposit. A payment hold lasts 15 minutes. Reservations are confirmed only after server-side payment verification and a final availability check.",
           ],

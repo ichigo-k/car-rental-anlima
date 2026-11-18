@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Footer } from "@/components/header";
 import { MarketingHero, MarketingCta } from "@/components/anlima-pages";
 import { SectionHeading } from "@/components/marketing-sections";
+import { StartTourButton } from "@/components/booking-tour";
 export const metadata: Metadata = { title: "How It Works" };
 const steps = [
   [
@@ -38,6 +39,11 @@ export default function HowItWorksPage() {
               From choosing your car to hitting the road, our simple booking
               process makes getting started quick and convenient.
             </SectionHeading>
+            <p className="tour-cta">
+              <StartTourButton className="button">
+                Show me on the website: take the guided tour
+              </StartTourButton>
+            </p>
             <ol>
               {steps.map(([title, copy, image, alt], i) => (
                 <li key={title}>

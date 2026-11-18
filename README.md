@@ -40,9 +40,11 @@ Email and password sign-in works without any OAuth keys. Google and Facebook are
 
 Register those paths on your app's domain in each provider's dashboard.
 
-New accounts have the `CUSTOMER` role. To create an admin, sign up normally, open `npm exec prisma studio`, and change that user's role to `ADMIN`. Other staff roles are `MANAGER`, `AGENT`, `FLEET` and `FINANCE`. Sign in again after changing a role.
+New accounts have the `CUSTOMER` role. To create the first administrator, sign up with email and password, open `npm exec prisma studio`, and change that user's role to `ADMIN`. After that, administrators add and manage staff at `/admin/staff`; the roles are `ADMIN`, `MANAGER`, `AGENT`, `FLEET` and `FINANCE`. Each role's permissions are listed in `src/lib/permissions.ts` and checked on the server.
 
-Staff sign-in goes to `/admin`; customers return to their booking or account page. Staff access is checked on the server.
+Staff must use two-step sign-in. On their first sign-in they are sent to `/staff-security` to link an authenticator app and save backup codes; every later sign-in asks for a code. Staff accounts cannot use Google or Facebook sign-in. If someone loses their phone, an administrator can reset their two-step sign-in from `/admin/staff`.
+
+Staff sign-in goes to `/admin`; customers return to their booking or account page.
 
 ## Reservations and payments
 

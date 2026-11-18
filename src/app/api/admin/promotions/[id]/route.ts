@@ -3,6 +3,7 @@ import { session } from "@/lib/auth";
 import { trustedOrigin } from "@/lib/request";
 import { promotionInput } from "@/lib/promotion-input";
 import { db } from "@/lib/db";
+import { can } from "@/lib/permissions";
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -13,7 +14,8 @@ export async function PATCH(
       return NextResponse.json({ error: "Sign in required" }, { status: 401 });
     if (
       !trustedOrigin(req) ||
-      !["ADMIN", "MANAGER"].includes(current.user.role)
+      !current.user.twoFactorEnabled ||
+      !can(current.user.role, "promotion.manage")
     )
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     const parsed = promotionInput.safeParse(await req.json());

@@ -364,6 +364,7 @@ async function main() {
       await db.payment.deleteMany({
         where: { bookingId: { in: bookings.map((b) => b.id) } },
       });
+      await db.notification.deleteMany({ where: { booking: { vehicleId } } });
       await db.booking.deleteMany({ where: { vehicleId } });
       await db.vehicleBlock.deleteMany({ where: { vehicleId } });
       await db.vehicle.delete({ where: { id: vehicleId } });

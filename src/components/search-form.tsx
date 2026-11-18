@@ -92,10 +92,10 @@ export function SearchForm({
           <span>Car Type</span>
           <select name="category" defaultValue={initial.category || ""}>
             <option value="">Any Type</option>
-            <option value="Sedan">Sedan</option>
+            <option value="Saloon">Saloon</option>
             <option value="SUV">SUV</option>
-            <option value="Luxury">Luxury</option>
-            <option value="Hatchback">Hatchback</option>
+            <option value="Pickup">Pickup</option>
+            <option value="Executive">Executive</option>
           </select>
         </div>
       </label>

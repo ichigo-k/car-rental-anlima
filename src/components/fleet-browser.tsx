@@ -31,9 +31,9 @@ export function FleetBrowser({
     );
   return (
     <>
-      <div className="filter-bar">
+      <div className="filter-bar" data-tour="filters">
         <div className="filter-tabs" role="group" aria-label="Car category">
-          {["All Cars", "Sedan", "SUV", "Hatchback", "Luxury"].map((f) => (
+          {["All Cars", "Saloon", "SUV", "Pickup", "Executive"].map((f) => (
             <button
               type="button"
               aria-pressed={filter === f}
@@ -78,7 +78,7 @@ export function FleetBrowser({
           </select>
         </div>
       </div>
-      <div className="fleet-grid">
+      <div className="fleet-grid" data-tour="fleet">
         {visible.map((c) => (
           <VehicleCard car={c} query={query} detailed key={c.id} />
         ))}

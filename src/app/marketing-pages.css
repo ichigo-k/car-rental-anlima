@@ -58,11 +58,16 @@
   min-height: 50px;
   padding: 13px 30px;
 }
-.how-page-hero > img {
-  width: 160.6% !important;
-  height: 160.6% !important;
-  left: -45.7% !important;
-  top: -5.5% !important;
+/* Figma 341:175 crop, anchored right so the people stay in frame at any width. */
+@media (min-width: 761px) {
+  .how-page-hero > img {
+    width: max(2317px, 160.9%) !important;
+    height: auto !important;
+    left: auto !important;
+    right: calc(max(2317px, 160.9%) * -0.0945) !important;
+    top: calc(402.5px - max(2317px, 160.9vw) * 0.1925) !important;
+    bottom: auto !important;
+  }
 }
 .anlima-story {
   margin-block: 100px;

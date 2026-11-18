@@ -3,8 +3,11 @@ import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth";
 import { RentalAction } from "@/components/rental-action";
+import { BookingLifecycle } from "@/components/booking-lifecycle";
 import { money } from "@/lib/catalogue";
 import { bookingStatus, statusLabel } from "@/lib/booking-status";
+import { getFees, cancellationTerms } from "@/lib/fees";
+import { can } from "@/lib/permissions";
 export const dynamic = "force-dynamic";
 export default async function Reservations({
   searchParams,
@@ -12,7 +15,7 @@ export default async function Reservations({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const current = await requireStaff();
-  if (!["ADMIN", "MANAGER", "AGENT"].includes(current.user.role))
+  if (!can(current.user.role, "booking.read"))
     return (
       <section className="admin-panel">
         <h1>Booking access required.</h1>
@@ -26,8 +29,10 @@ export default async function Reservations({
   const statuses = [
     "PENDING_PAYMENT",
     "CONFIRMED",
-    "ACTIVE",
-    "COMPLETED",
+    "CHECKED_OUT",
+    "RETURNED",
+    "CLOSED",
+    "NO_SHOW",
     "CANCELLED",
     "PAYMENT_REVIEW",
     "EXPIRED",
@@ -45,7 +50,11 @@ export default async function Reservations({
   if (q.window === "pickups")
     conditions.push({ status: "CONFIRMED", pickup: { gte: start, lt: end } });
   if (q.window === "returns")
-    conditions.push({ status: "ACTIVE", returnAt: { lt: end } });
+    conditions.push({ status: "CHECKED_OUT", returnAt: { lt: end } });
+  if (q.window === "cancel-requests")
+    conditions.push({ status: "CONFIRMED", cancelRequestedAt: { not: null } });
+  if (q.window === "to-close")
+    conditions.push({ status: { in: ["RETURNED", "NO_SHOW"] } });
   if (search)
     conditions.push({
       OR: [
@@ -62,19 +71,23 @@ export default async function Reservations({
     Math.min(10000, Number.parseInt(q.page ?? "1", 10) || 1),
   );
   const pageSize = 20;
-  const [bookings, count] = await Promise.all([
-    db.booking.findMany({
-      where,
-      include: {
-        user: { select: { name: true, email: true } },
-        vehicle: true,
-        inspections: true,
-      },
-      orderBy: { createdAt: "desc" },
-      take: pageSize,
-      skip: (page - 1) * pageSize,
-    }),
-    db.booking.count({ where }),
+  const [fees, [bookings, count]] = await Promise.all([
+    getFees(db),
+    Promise.all([
+      db.booking.findMany({
+        where,
+        include: {
+          user: { select: { name: true, email: true } },
+          vehicle: true,
+          inspections: true,
+          charges: { orderBy: { createdAt: "asc" } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: pageSize,
+        skip: (page - 1) * pageSize,
+      }),
+      db.booking.count({ where }),
+    ]),
   ]);
   const pageLink = (n: number) =>
     `/admin/bookings?${new URLSearchParams({ ...(search ? { q: search } : {}), ...(status ? { status } : {}), ...(q.window ? { window: q.window } : {}), page: String(n) })}`;
@@ -118,9 +131,14 @@ export default async function Reservations({
       </form>
       {q.window && (
         <p className="admin-result-count">
-          {q.window === "pickups"
-            ? "Confirmed pickups today"
-            : "Active rentals due back today or overdue"}{" "}
+          {
+            {
+              pickups: "Confirmed pickups today",
+              returns: "Rentals due back today or overdue",
+              "cancel-requests": "Customer cancellation requests",
+              "to-close": "Returned or no-show rentals awaiting closure",
+            }[q.window]
+          }{" "}
           · <Link href="/admin/bookings">Clear date filter</Link>
         </p>
       )}
@@ -205,18 +223,60 @@ export default async function Reservations({
                   GMT. This car is not confirmed yet.
                 </p>
               )}
+              {b.status === "CONFIRMED" && b.cancelRequestedAt && (
+                <p className="admin-callout">
+                  The customer asked to cancel on{" "}
+                  {b.cancelRequestedAt.toLocaleString("en-GB", {
+                    timeZone: "Africa/Accra",
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                  . Apply the cancellation policy, then cancel the booking.
+                </p>
+              )}
+              {b.status === "CANCELLED" && b.cancellationReason && (
+                <p className="admin-callout subtle">
+                  Cancelled: {b.cancellationReason}
+                </p>
+              )}
               {state === "EXPIRED" && (
                 <p className="admin-callout subtle">
                   The unpaid hold has expired and no longer reserves
                   availability.
                 </p>
               )}
-              {["CONFIRMED", "ACTIVE"].includes(b.status) && (
-                <RentalAction
-                  id={b.id}
-                  kind={b.status === "CONFIRMED" ? "CHECKOUT" : "RETURN"}
-                />
-              )}
+              {["CONFIRMED", "CHECKED_OUT"].includes(b.status) &&
+                can(current.user.role, "booking.write") && (
+                  <RentalAction
+                    id={b.id}
+                    kind={b.status === "CONFIRMED" ? "CHECKOUT" : "RETURN"}
+                  />
+                )}
+              <BookingLifecycle
+                id={b.id}
+                status={state}
+                role={current.user.role}
+                pickupPassed={b.pickup <= now}
+                deposit={b.deposit}
+                depositApplied={b.depositApplied}
+                presets={{
+                  CLEANING: fees.cleaningFee,
+                  SMOKING: fees.smokingFee,
+                }}
+                cancellation={
+                  b.status === "CONFIRMED"
+                    ? cancellationTerms(fees, b, now)
+                    : null
+                }
+                charges={b.charges.map((c) => ({
+                  id: c.id,
+                  kind: c.kind,
+                  amount: c.amount,
+                  reason: c.reason,
+                  evidence: c.evidence,
+                  status: c.status,
+                }))}
+              />
               <details className="admin-inspections">
                 <summary>Inspection history ({b.inspections.length})</summary>
                 {b.inspections.length ? (

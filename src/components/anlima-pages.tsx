@@ -32,8 +32,7 @@ export function MarketingHero({ page }: { page: "about" | "contact" | "how" }) {
         <h1>
           {how ? (
             <>
-              Your Journey Starts with{" "}
-              <br />a Simple Booking
+              Your Journey Starts with <br />a Simple Booking
             </>
           ) : (
             <>

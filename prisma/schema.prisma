@@ -23,18 +23,36 @@ datasource db {
 }
 
 model User {
-  id            String      @id
-  name          String
-  email         String      @unique
-  emailVerified Boolean     @default(false)
-  image         String?
-  role          String      @default("CUSTOMER")
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  sessions      Session[]
-  accounts      Account[]
-  bookings      Booking[]
-  favourites    Favourite[]
+  id                  String      @id
+  name                String
+  email               String      @unique
+  emailVerified       Boolean     @default(false)
+  image               String?
+  role                String      @default("CUSTOMER")
+  twoFactorEnabled    Boolean     @default(false)
+  phoneNumber         String?     @unique
+  phoneNumberVerified Boolean     @default(false)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  sessions            Session[]
+  accounts            Account[]
+  bookings            Booking[]
+  favourites          Favourite[]
+  twoFactors          TwoFactor[]
+}
+
+model TwoFactor {
+  id                      String    @id
+  secret                  String
+  backupCodes             String
+  userId                  String
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified                Boolean   @default(true)
+  failedVerificationCount Int       @default(0)
+  lockedUntil             DateTime?
+
+  @@index([secret])
+  @@index([userId])
 }
 
 model Session {
@@ -76,23 +94,31 @@ model Verification {
 }
 
 model Vehicle {
-  id           String         @id @default(cuid())
-  slug         String         @unique
-  name         String
-  category     String
-  seats        Int
-  transmission String         @default("Automatic")
-  fuel         String         @default("Petrol")
-  dailyRate    Int
-  deposit      Int            @default(150000)
-  image        String
-  description  String
-  status       String         @default("AVAILABLE")
-  bookings     Booking[]
-  blocks       VehicleBlock[]
-  pickupPoints String[]       @default(["Accra · Airport pickup", "Accra · City pickup"])
-  favourites   Favourite[]
-  createdAt    DateTime       @default(now())
+  id               String         @id @default(cuid())
+  slug             String         @unique
+  name             String
+  category         String
+  seats            Int
+  transmission     String         @default("Automatic")
+  fuel             String         @default("Petrol")
+  dailyRate        Int
+  deposit          Int            @default(150000)
+  image            String
+  description      String
+  status           String         @default("AVAILABLE")
+  bookings         Booking[]
+  blocks           VehicleBlock[]
+  pickupPoints     String[]       @default(["Accra · Airport pickup", "Accra · City pickup"])
+  gpsImei          String?        @unique
+  // SELF_DRIVE, BOTH (self-drive or with an ANLIMA driver) or CHAUFFEUR_ONLY.
+  driverOption     String         @default("SELF_DRIVE")
+  // Daily rate when booked with a driver; required unless SELF_DRIVE.
+  withDriverRate   Int?
+  // Per-car mileage rules; empty means the Fees & settings defaults apply.
+  dailyKmAllowance Int?
+  excessKmFee      Int?
+  favourites       Favourite[]
+  createdAt        DateTime       @default(now())
 }
 
 model Favourite {
@@ -116,12 +142,12 @@ model VehicleBlock {
 }
 
 model Booking {
-  id                 String       @id @default(cuid())
-  reference          String       @unique
+  id                 String          @id @default(cuid())
+  reference          String          @unique
   userId             String
-  user               User         @relation(fields: [userId], references: [id])
+  user               User            @relation(fields: [userId], references: [id])
   vehicleId          String
-  vehicle            Vehicle      @relation(fields: [vehicleId], references: [id])
+  vehicle            Vehicle         @relation(fields: [vehicleId], references: [id])
   pickup             DateTime
   returnAt           DateTime
   location           String
@@ -130,25 +156,41 @@ model Booking {
   customerEmail      String?
   ghanaCardEncrypted String?
   ghanaCardLast4     String?
-  licenceNumber      String
-  licenceExpiry      DateTime
-  status             String       @default("PENDING_PAYMENT")
+  licenceNumber      String?
+  licenceExpiry      DateTime?
+  status             String          @default("PENDING_PAYMENT")
   days               Int
   dailyRate          Int
   rentalAmount       Int
   deposit            Int
   total              Int
-  discountAmount     Int          @default(0)
+  discountAmount     Int             @default(0)
   promotionId        String?
-  promotion          Promotion?   @relation(fields: [promotionId], references: [id], onDelete: SetNull)
+  promotion          Promotion?      @relation(fields: [promotionId], references: [id], onDelete: SetNull)
   promotionName      String?
   couponCode         String?
   termsVersion       String
   termsAcceptedAt    DateTime
   holdExpiresAt      DateTime
-  createdAt          DateTime     @default(now())
+  cancelledAt        DateTime?
+  cancellationReason String?
+  cancelRequestedAt  DateTime?
+  returnedAt         DateTime?
+  closedAt           DateTime?
+  depositApplied     Int?
+  withDriver         Boolean         @default(false)
+  durationDiscount   Int             @default(0)
+  extrasAmount       Int             @default(0)
+  deliveryAddress    String?
+  extraDriverName    String?
+  extraDriverLicence String?
+  createdAt          DateTime        @default(now())
   payments           Payment[]
   inspections        Inspection[]
+  charges            BookingCharge[]
+  notifications      Notification[]
+  review             Review?
+  items              BookingItem[]
 
   @@index([vehicleId, pickup, returnAt])
   @@index([promotionId])
@@ -180,6 +222,123 @@ model Payment {
   provider   String    @default("PAYSTACK")
   verifiedAt DateTime?
   createdAt  DateTime  @default(now())
+}
+
+// One review per returned rental. Customers write it; staff approve, hide
+// and choose which appear on the website, but never edit the words.
+model Review {
+  id          String    @id @default(cuid())
+  bookingId   String    @unique
+  booking     Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  userId      String
+  rating      Int
+  body        String
+  displayName String
+  status      String    @default("PENDING")
+  featured    Boolean   @default(false)
+  sortOrder   Int       @default(0)
+  decidedBy   String?
+  decidedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([status, featured, sortOrder])
+}
+
+// Outbox for email (Resend) and SMS (SMSOnlineGH). Rows are written in the
+// same transaction as the event; delivery happens afterwards and never undoes it.
+model Notification {
+  id            String    @id @default(cuid())
+  dedupeKey     String    @unique
+  bookingId     String?
+  booking       Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  template      String
+  channel       String
+  recipient     String
+  subject       String?
+  body          String
+  status        String    @default("QUEUED")
+  attempts      Int       @default(0)
+  nextAttemptAt DateTime  @default(now())
+  lastError     String?
+  providerId    String?
+  sentAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([status, nextAttemptAt])
+  @@index([bookingId])
+}
+
+// One row per chatbot request, for rate limiting. Only a keyed hash of the
+// visitor is stored, never the conversation.
+model AssistantRequest {
+  id          String   @id @default(cuid())
+  fingerprint String
+  createdAt   DateTime @default(now())
+
+  @@index([fingerprint, createdAt])
+  @@index([createdAt])
+}
+
+// Short-lived provider state, such as the cached Tracksolid access token.
+model IntegrationState {
+  key       String    @id
+  value     String
+  expiresAt DateTime?
+  updatedAt DateTime  @updatedAt
+}
+
+// Single row (id "default") of fees set by ANLIMA in the admin dashboard.
+// Amounts are pesewas; every change is recorded in AuditEvent.
+model FeeSettings {
+  id                      String   @id @default("default")
+  lateGraceMinutes        Int      @default(60)
+  lateHourPercent         Int      @default(10)
+  discount3Days           Int      @default(5)
+  discount7Days           Int      @default(10)
+  discount14Days          Int      @default(15)
+  discount30Days          Int      @default(20)
+  deliveryFee             Int      @default(15000)
+  extraDriverFee          Int      @default(10000)
+  driverOvertimeHourly    Int      @default(5000)
+  fuelPerQuarter          Int      @default(0)
+  cleaningFee             Int      @default(0)
+  smokingFee              Int      @default(0)
+  dailyKmAllowance        Int?
+  excessKmFee             Int      @default(0)
+  freeCancellationHours   Int      @default(48)
+  lateCancellationPercent Int      @default(0)
+  updatedAt               DateTime @updatedAt
+  updatedBy               String?
+}
+
+// The itemised quote saved with each booking (Guide FR-005), so historic
+// totals never change when prices are edited.
+model BookingItem {
+  id        String  @id @default(cuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  kind      String
+  label     String
+  amount    Int
+
+  @@index([bookingId])
+}
+
+model BookingCharge {
+  id         String    @id @default(cuid())
+  bookingId  String
+  booking    Booking   @relation(fields: [bookingId], references: [id])
+  kind       String
+  amount     Int
+  reason     String
+  evidence   String?
+  status     String    @default("PROPOSED")
+  proposedBy String
+  decidedBy  String?
+  decidedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([bookingId])
 }
 
 model Inspection {

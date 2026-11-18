@@ -18,7 +18,10 @@ export function paymentNoticeState(
   )
     return null;
   if (status === "PAYMENT_REVIEW" || reviewCharge) return "review";
-  if (status && ["CONFIRMED", "ACTIVE", "COMPLETED"].includes(status))
+  if (
+    status &&
+    ["CONFIRMED", "CHECKED_OUT", "RETURNED", "CLOSED"].includes(status)
+  )
     return "verified";
   return requested === "cancelled" ? "cancelled" : "pending";
 }

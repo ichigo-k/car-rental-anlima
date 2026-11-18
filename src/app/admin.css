@@ -258,7 +258,7 @@
   gap: 15px;
   align-items: center;
 }
-.admin-attention > div:last-child {
+.admin-attention > div:nth-child(2) {
   background: #f7edce;
   border-color: #ecdfb5;
 }
@@ -779,5 +779,380 @@
   }
   .admin-attention a {
     margin-left: 0;
+  }
+}
+.booking-lifecycle {
+  margin-top: 14px;
+  display: grid;
+  gap: 12px;
+}
+.booking-lifecycle h3 {
+  font-size: 13px;
+  margin: 0 0 8px;
+}
+.charge-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.charge-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #dce5ed;
+  border-radius: 8px;
+}
+.charge-list p {
+  margin: 4px 0 0;
+  font-size: 12px;
+}
+.charge-list small {
+  font-size: 11px;
+  color: #647181;
+}
+.charge-status {
+  margin-left: 8px;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #edf1f5;
+}
+.charge-status--proposed {
+  background: #f7edce;
+}
+.charge-status--approved {
+  background: #dff3e4;
+}
+.charge-actions,
+.lifecycle-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.settlement {
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+@media (max-width: 760px) {
+  .charge-list li {
+    flex-direction: column;
+  }
+}
+.staff-security {
+  max-width: 560px;
+  margin: 40px auto;
+  padding: 0 16px;
+  display: grid;
+  gap: 20px;
+}
+.staff-security .design-brand {
+  width: 170px;
+}
+.staff-security img[alt="Authenticator setup QR code"] {
+  display: block;
+  width: 240px;
+  max-width: 100%;
+  height: auto;
+  background: #fff;
+  image-rendering: pixelated;
+}
+.mfa-secret {
+  display: block;
+  margin: 8px 0;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  word-spacing: 0.3em;
+}
+.backup-codes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+.backup-codes code {
+  font-size: 14px;
+}
+.staff-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.staff-actions .danger {
+  color: #b42318;
+}
+.role-guide {
+  display: grid;
+  gap: 8px;
+  padding-left: 18px;
+  font-size: 13px;
+}
+.fee-form {
+  display: grid;
+  gap: 18px;
+  max-width: 720px;
+}
+.fee-form fieldset {
+  border: 1px solid #dce5ed;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+.fee-form legend {
+  font-weight: 600;
+  padding: 0 6px;
+}
+.fee-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+.fee-form .button {
+  justify-self: start;
+}
+@media (max-width: 760px) {
+  .fee-form fieldset {
+    grid-template-columns: 1fr;
+  }
+}
+.gps-table small {
+  color: #647181;
+}
+.gps-state {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #edf1f5;
+}
+.gps-state--live {
+  background: #dff3e4;
+  color: #12612f;
+}
+.gps-state--stale,
+.gps-state--no_fix {
+  background: #f7edce;
+  color: #7a5a00;
+}
+.gps-state--offline {
+  background: #fde8e7;
+  color: #9a1c13;
+}
+.gps-mapping {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px 16px;
+}
+.gps-mapping label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+.notify-status {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #f7edce;
+  color: #7a5a00;
+}
+.notify-status--sent {
+  background: #dff3e4;
+  color: #12612f;
+}
+.notify-status--failed {
+  background: #fde8e7;
+  color: #9a1c13;
+}
+.review-admin {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid #edf1f5;
+}
+.review-admin blockquote {
+  margin: 6px 0;
+  font-size: 14px;
+}
+.review-admin small {
+  color: #647181;
+}
+.review-admin-stars > span {
+  color: #dce5ed;
+}
+.review-admin-side {
+  display: grid;
+  justify-items: end;
+  align-content: start;
+  gap: 8px;
+  min-width: 170px;
+}
+.review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px 12px;
+}
+@media (max-width: 760px) {
+  .review-admin {
+    flex-direction: column;
+  }
+  .review-admin-side {
+    justify-items: start;
+  }
+  .review-actions {
+    justify-content: flex-start;
+  }
+}
+/* Live fleet map (admin/tracking). */
+.fleet-live-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.fleet-live-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 16px;
+}
+.fleet-live-map {
+  height: 560px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #dce2e8;
+  z-index: 0;
+}
+.fleet-live-side {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+.fleet-live-cars {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+.fleet-live-cars button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 12px 1fr;
+  column-gap: 10px;
+  align-items: center;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid #dce2e8;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+}
+.fleet-live-cars button[aria-pressed="true"] {
+  border-color: #012d5a;
+  box-shadow: inset 0 0 0 1px #012d5a;
+}
+.fleet-live-cars small {
+  grid-column: 2;
+  color: #647181;
+}
+.fleet-live-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.fleet-live-detail {
+  display: grid;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #dce2e8;
+}
+.fleet-live-detail h3 {
+  margin: 0;
+}
+.fleet-live-detail dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 14px;
+}
+.fleet-live-detail dt {
+  color: #647181;
+}
+.fleet-live-detail dd {
+  margin: 0;
+}
+.fleet-live-detail label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+.fleet-live-detail .fleet-live-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fleet-live-check input {
+  width: auto;
+  min-height: 0;
+  margin: 0;
+}
+.fleet-live-playback {
+  display: grid;
+  gap: 4px;
+}
+.fleet-live-playback input[type="range"] {
+  width: 100%;
+}
+.fleet-marker {
+  overflow: visible;
+}
+.fleet-marker-dot {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+}
+.fleet-marker-dot svg {
+  width: 16px;
+  height: 16px;
+}
+.fleet-marker-name {
+  position: absolute;
+  left: 32px;
+  top: 4px;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  color: #012d5a;
+  background: #fff;
+  padding: 1px 6px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+}
+@media (max-width: 900px) {
+  .fleet-live-body {
+    grid-template-columns: 1fr;
+  }
+  .fleet-live-map {
+    height: 420px;
   }
 }

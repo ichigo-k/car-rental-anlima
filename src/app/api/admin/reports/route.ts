@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { can } from "@/lib/permissions";
 const cell = (v: string | number) =>
   `"${String(v)
     .replace(/^[=+@-]/, "'")
@@ -8,8 +9,7 @@ const cell = (v: string | number) =>
 export async function GET() {
   try {
     const current = await requireStaff();
-    if (!["ADMIN", "MANAGER", "FINANCE"].includes(current.user.role))
-      throw new Error();
+    if (!can(current.user.role, "report.export")) throw new Error();
     const bookings = await db.booking.findMany({
       include: { vehicle: true },
       orderBy: { createdAt: "desc" },

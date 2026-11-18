@@ -82,11 +82,20 @@ export default async function Detail({
                 deposit: car.deposit,
                 pickupPoints: car.pickupPoints,
                 status: car.status,
+                driverOption: car.driverOption,
+                withDriverRate: car.withDriverRate,
               }}
               initial={q}
               user={
                 current
-                  ? { name: current.user.name, email: current.user.email }
+                  ? {
+                      name: current.user.name,
+                      email: current.user.email,
+                      emailVerified: current.user.emailVerified,
+                      phone: current.user.phoneNumberVerified
+                        ? (current.user.phoneNumber ?? null)
+                        : null,
+                    }
                   : null
               }
             />

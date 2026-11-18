@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth";
+import { allowed } from "@/lib/booking-lifecycle";
+import { getFees, returnCharges, FUEL_LEVELS } from "@/lib/fees";
 const schema = z.object({
   kind: z.enum(["CHECKOUT", "RETURN"]),
   mileage: z.number().int().nonnegative(),
-  fuel: z.enum(["Full", "Three quarters", "Half", "Quarter", "Empty"]),
+  fuel: z.enum(FUEL_LEVELS),
   condition: z.string().min(5).max(3000),
   acknowledgement: z.string().min(3).max(200),
 });
@@ -15,7 +17,7 @@ export async function POST(
 ) {
   try {
     const current = await requireStaff();
-    if (!["ADMIN", "MANAGER", "AGENT"].includes(current.user.role))
+    if (!allowed("handover", current.user.role))
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     if (
       req.headers.get("origin") !== new URL(process.env.BETTER_AUTH_URL!).origin
@@ -29,7 +31,7 @@ export async function POST(
         where: { id },
         include: { inspections: true },
       });
-      if (b.status !== (data.kind === "CHECKOUT" ? "CONFIRMED" : "ACTIVE"))
+      if (b.status !== (data.kind === "CHECKOUT" ? "CONFIRMED" : "CHECKED_OUT"))
         throw new Error("This reservation is not ready for that operation.");
       if (
         data.kind === "RETURN" &&
@@ -40,10 +42,30 @@ export async function POST(
       await tx.inspection.create({
         data: { ...data, bookingId: id, recordedBy: current.user.id },
       });
+      const now = new Date();
       await tx.booking.update({
         where: { id },
-        data: { status: data.kind === "CHECKOUT" ? "ACTIVE" : "COMPLETED" },
+        data:
+          data.kind === "CHECKOUT"
+            ? { status: "CHECKED_OUT" }
+            : { status: "RETURNED", returnedAt: now },
       });
+      if (data.kind === "RETURN") {
+        const proposals = returnCharges(
+          await getFees(tx),
+          b,
+          b.inspections.find((i) => i.kind === "CHECKOUT"),
+          { ...data, at: now },
+        );
+        if (proposals.length)
+          await tx.bookingCharge.createMany({
+            data: proposals.map((c) => ({
+              ...c,
+              bookingId: id,
+              proposedBy: "SYSTEM",
+            })),
+          });
+      }
       await tx.auditEvent.create({
         data: {
           actorId: current.user.id,

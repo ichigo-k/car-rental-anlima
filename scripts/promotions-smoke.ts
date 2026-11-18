@@ -2,6 +2,7 @@ import "dotenv/config";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
+import { enrolMfa, testPhone } from "./staff-mfa";
 const db = new PrismaClient({
   transactionOptions: { maxWait: 15000, timeout: 30000 },
 });
@@ -51,7 +52,17 @@ async function main() {
   assert.equal(signup.status, 200);
   const account = await signup.json();
   userId = account.user.id;
-  const cookie = signup.headers
+  // Booking needs a confirmed email and mobile; the main smoke test covers
+  // the confirmation flows themselves.
+  await db.user.update({
+    where: { id: userId },
+    data: {
+      emailVerified: true,
+      phoneNumber: testPhone(),
+      phoneNumberVerified: true,
+    },
+  });
+  let cookie = signup.headers
     .getSetCookie()
     .map((c) => c.split(";")[0])
     .join("; ");
@@ -99,6 +110,8 @@ async function main() {
     "customers cannot create promotions",
   );
   await db.user.update({ where: { id: userId }, data: { role: "ADMIN" } });
+  cookie = (await enrolMfa(base, cookie, password)).cookie;
+  headers.Cookie = cookie;
   assert.equal(
     (
       await fetch(`${base}/api/admin/promotions`, {
@@ -370,6 +383,8 @@ main()
       await db.auditEvent.deleteMany({ where: { actorId: userId } });
       await db.payment.deleteMany({ where: { bookingId: { in: ids } } });
       await db.inspection.deleteMany({ where: { bookingId: { in: ids } } });
+      await db.notification.deleteMany({ where: { booking: { userId } } });
+      await db.notification.deleteMany({ where: { recipient: email } });
       await db.booking.deleteMany({ where: { userId } });
     }
     await db.promotion.deleteMany({ where: { id: { in: promotionIds } } });

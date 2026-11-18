@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Stepper, { Step } from "./stepper/Stepper";
 import { money } from "@/lib/catalogue";
-import { quote } from "@/lib/pricing";
+import { displayPhone } from "@/lib/phone";
+import { quote, type QuoteItem } from "@/lib/pricing";
 import {
   ghanaCardInput,
   licenceValidThrough,
@@ -19,8 +20,16 @@ type BookingCar = {
   deposit: number;
   pickupPoints: string[];
   status: string;
+  driverOption: string;
+  withDriverRate: number | null;
 };
-type Customer = { name: string; email: string };
+// phone is the customer's confirmed mobile number, or null until confirmed.
+type Customer = {
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  phone: string | null;
+};
 export function BookingForm({
   car,
   initial,
@@ -44,6 +53,9 @@ export function BookingForm({
         key: string;
         discountAmount: number;
         promotionName: string | null;
+        items: QuoteItem[];
+        durationDiscount: number;
+        extrasAmount: number;
       } & ReturnType<typeof quote>)
     | null
   >(null);
@@ -55,12 +67,24 @@ export function BookingForm({
       : (car.pickupPoints[0] ?? ""),
     customerName: user?.name ?? "",
     customerEmail: user?.email ?? "",
-    phone: "",
+    phone: user?.phone ? displayPhone(user.phone) : "",
     ghanaCardNumber: "",
     licenceNumber: "",
     licenceExpiry: "",
+    withDriver: car.driverOption === "CHAUFFEUR_ONLY",
+    delivery: false,
+    deliveryAddress: "",
+    extraDriver: false,
+    extraDriverName: "",
+    extraDriverLicence: "",
     terms: false,
   });
+  // The daily rate for the chosen service; the server quote adds discounts
+  // and extras.
+  const rate =
+    values.withDriver && car.withDriverRate
+      ? car.withDriverRate
+      : car.dailyRate;
   function field(key: keyof typeof values, value: string | boolean) {
     setValues((v) => ({ ...v, [key]: value }));
     setError("");
@@ -70,11 +94,11 @@ export function BookingForm({
     pricing = quote(
       new Date(values.pickup),
       new Date(values.returnAt),
-      car.dailyRate,
+      rate,
       car.deposit,
     );
   } catch {}
-  const quoteKey = `${car.id}|${values.pickup}|${values.returnAt}|${appliedCode}|${quoteRevision}`;
+  const quoteKey = `${car.id}|${values.pickup}|${values.returnAt}|${appliedCode}|${values.withDriver}|${values.delivery}|${values.extraDriver}|${quoteRevision}`;
   const activeOffer = offer?.key === quoteKey ? offer : null;
   const livePricing = activeOffer ?? pricing;
   useEffect(() => {
@@ -104,6 +128,9 @@ export function BookingForm({
           pickup,
           returnAt,
           couponCode: appliedCode,
+          withDriver: values.withDriver,
+          delivery: values.delivery,
+          extraDriver: values.extraDriver,
         }),
         signal: controller.signal,
       })
@@ -131,6 +158,34 @@ export function BookingForm({
     setAppliedCode(code);
     setQuoteRevision((n) => n + 1);
   }
+  if (user && !(user.emailVerified && user.phone)) {
+    const back = `/fleet/${car.slug}?${new URLSearchParams(
+      Object.fromEntries(
+        Object.entries({
+          pickup: values.pickup,
+          returnAt: values.returnAt,
+          location: values.location,
+        }).filter(([, v]) => v),
+      ),
+    )}`;
+    return (
+      <div className="booking-signin stack verify-notice">
+        <span className="booking-step-caption">ONE QUICK STEP FIRST</span>
+        <h2>Confirm your email and mobile number.</h2>
+        <p>
+          We send your booking confirmation, pickup details and reminders to
+          them. It takes a minute and you only do it once. Your trip details
+          will be kept.
+        </p>
+        <Link
+          className="button"
+          href={`/account/verify?next=${encodeURIComponent(back)}`}
+        >
+          Confirm my details <span aria-hidden="true">→</span>
+        </Link>
+      </div>
+    );
+  }
   if (!user)
     return (
       <form
@@ -154,7 +209,7 @@ export function BookingForm({
           <h2>Make this drive yours.</h2>
           <p>Choose your dates first. Sign in next to save your reservation.</p>
         </div>
-        <label>
+        <label data-tour="booking-dates">
           Start date & time
           <input
             type="datetime-local"
@@ -172,7 +227,7 @@ export function BookingForm({
             required
           />
         </label>
-        <label>
+        <label data-tour="pickup-point">
           Pick-up point
           <select
             value={values.location}
@@ -191,13 +246,14 @@ export function BookingForm({
           Ghana time (GMT). These pickup points are available for this car.
         </p>
         {pricing && (
-          <div className="guest-price">
+          <div className="guest-price" data-tour="booking-price">
             <span>{pricing.days} days + refundable deposit</span>
             <strong>{money(pricing.total)}</strong>
           </div>
         )}
         <button
           className="button"
+          data-tour="booking-continue"
           disabled={car.status !== "AVAILABLE" || !car.pickupPoints.length}
         >
           Continue to sign in <span aria-hidden="true">→</span>
@@ -239,7 +295,16 @@ export function BookingForm({
       return false;
     }
     if (
+      step === 1 &&
+      values.delivery &&
+      values.deliveryAddress.trim().length < 5
+    ) {
+      setError("Add the address where we should deliver and collect the car.");
+      return false;
+    }
+    if (
       step === 3 &&
+      !values.withDriver &&
       !licenceValidThrough(values.licenceExpiry, new Date(values.returnAt))
     ) {
       setError("Your licence must remain valid throughout the rental.");
@@ -260,8 +325,24 @@ export function BookingForm({
     setBusy(true);
     setError("");
     try {
+      const optional = (value: string) => value.trim() || undefined;
       const body = {
         ...values,
+        licenceNumber: values.withDriver
+          ? undefined
+          : optional(values.licenceNumber),
+        licenceExpiry: values.withDriver
+          ? undefined
+          : optional(values.licenceExpiry),
+        deliveryAddress: values.delivery
+          ? optional(values.deliveryAddress)
+          : undefined,
+        extraDriverName: values.extraDriver
+          ? optional(values.extraDriverName)
+          : undefined,
+        extraDriverLicence: values.extraDriver
+          ? optional(values.extraDriverLicence)
+          : undefined,
         couponCode: appliedCode,
         expectedTotal: activeOffer?.total,
         vehicleId: car.id,
@@ -316,7 +397,7 @@ export function BookingForm({
         </p>
       </div>
       {pricing && (
-        <div className="booking-cost-preview">
+        <div className="booking-cost-preview" data-tour="booking-price">
           <span>
             {pricing.days} rental day{pricing.days === 1 ? "" : "s"}
             <small>Includes {money(pricing.deposit)} refundable deposit</small>
@@ -357,7 +438,7 @@ export function BookingForm({
           <div className="stack">
             <h3>Where are you headed?</h3>
             <p className="muted">Times are shown in Ghana time (GMT).</p>
-            <label>
+            <label data-tour="booking-dates">
               Start date & time
               <input
                 type="datetime-local"
@@ -375,7 +456,7 @@ export function BookingForm({
                 required
               />
             </label>
-            <label>
+            <label data-tour="pickup-point">
               Pick-up point
               <select
                 value={values.location}
@@ -392,6 +473,81 @@ export function BookingForm({
             </label>
             <p className="field-hint">
               These are the pickup points available for this specific car.
+            </p>
+            {car.driverOption === "BOTH" ? (
+              <fieldset className="service-choice">
+                <legend>Who drives?</legend>
+                <label className="check">
+                  <input
+                    type="radio"
+                    name="service"
+                    checked={!values.withDriver}
+                    onChange={() => field("withDriver", false)}
+                  />
+                  <span>Self-drive · {money(car.dailyRate)}/day</span>
+                </label>
+                <label className="check">
+                  <input
+                    type="radio"
+                    name="service"
+                    checked={values.withDriver}
+                    onChange={() =>
+                      setValues((v) => ({
+                        ...v,
+                        withDriver: true,
+                        extraDriver: false,
+                      }))
+                    }
+                  />
+                  <span>
+                    With an ANLIMA driver · {money(car.withDriverRate ?? 0)}
+                    /day
+                  </span>
+                </label>
+              </fieldset>
+            ) : (
+              <p className="field-hint">
+                {car.driverOption === "CHAUFFEUR_ONLY"
+                  ? "This car comes with an ANLIMA driver."
+                  : "This car is for self-drive."}
+              </p>
+            )}
+            <fieldset className="service-choice">
+              <legend>Extras</legend>
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={values.delivery}
+                  onChange={(e) => field("delivery", e.target.checked)}
+                />
+                <span>Deliver and collect the car at my address</span>
+              </label>
+              {values.delivery && (
+                <label>
+                  Delivery address in Accra
+                  <textarea
+                    value={values.deliveryAddress}
+                    onChange={(e) => field("deliveryAddress", e.target.value)}
+                    minLength={5}
+                    maxLength={300}
+                    required
+                  />
+                </label>
+              )}
+              {!values.withDriver && (
+                <label className="check">
+                  <input
+                    type="checkbox"
+                    checked={values.extraDriver}
+                    onChange={(e) => field("extraDriver", e.target.checked)}
+                  />
+                  <span>Add another authorised driver</span>
+                </label>
+              )}
+            </fieldset>
+            <p className="field-hint">
+              Rentals of 3 days or more get a discount automatically. Fuel is
+              not included; return the car with the same fuel level.
             </p>
           </div>
         </Step>
@@ -428,13 +584,13 @@ export function BookingForm({
                 type="tel"
                 autoComplete="tel"
                 value={values.phone}
-                onChange={(e) => field("phone", e.target.value)}
+                readOnly
                 required
-                minLength={7}
-                maxLength={25}
-                placeholder="e.g. +233 24 000 0000"
               />
             </label>
+            <p className="field-hint">
+              Your confirmed mobile number. Booking updates are texted here.
+            </p>
             <label>
               Ghana Card number
               <input
@@ -459,35 +615,77 @@ export function BookingForm({
         <Step title="Driver">
           <div className="stack">
             <h3>A few details before you drive.</h3>
-            <p className="muted">
-              Your Ghana Card identifies you. A valid driving licence is also
-              required to drive the vehicle.
-            </p>
-            <label>
-              Driving licence number
-              <input
-                value={values.licenceNumber}
-                onChange={(e) => field("licenceNumber", e.target.value)}
-                required
-                minLength={4}
-                maxLength={80}
-                autoComplete="off"
-              />
-            </label>
-            <label>
-              Licence expiry date
-              <input
-                type="date"
-                value={values.licenceExpiry}
-                onChange={(e) => field("licenceExpiry", e.target.value)}
-                required
-                min={values.returnAt.slice(0, 10)}
-              />
-            </label>
-            <p className="field-hint">
-              Your licence must be valid until the end of your rental. Staff
-              check original documents at handover.
-            </p>
+            {values.withDriver ? (
+              <p className="muted">
+                An ANLIMA driver will drive, so you don’t need to add a driving
+                licence. Your Ghana Card identifies you at pickup.
+              </p>
+            ) : (
+              <>
+                <p className="muted">
+                  Your Ghana Card identifies you. A valid driving licence is
+                  also required to drive the vehicle.
+                </p>
+                <label>
+                  Driving licence number
+                  <input
+                    value={values.licenceNumber}
+                    onChange={(e) => field("licenceNumber", e.target.value)}
+                    required
+                    minLength={4}
+                    maxLength={80}
+                    autoComplete="off"
+                  />
+                </label>
+                <label>
+                  Licence expiry date
+                  <input
+                    type="date"
+                    value={values.licenceExpiry}
+                    onChange={(e) => field("licenceExpiry", e.target.value)}
+                    required
+                    min={values.returnAt.slice(0, 10)}
+                  />
+                </label>
+                <p className="field-hint">
+                  Your licence must be valid until the end of your rental. Staff
+                  check original documents at handover.
+                </p>
+                {values.extraDriver && (
+                  <>
+                    <h3>Additional driver</h3>
+                    <label>
+                      Full name
+                      <input
+                        value={values.extraDriverName}
+                        onChange={(e) =>
+                          field("extraDriverName", e.target.value)
+                        }
+                        required
+                        minLength={2}
+                        maxLength={120}
+                      />
+                    </label>
+                    <label>
+                      Driving licence number
+                      <input
+                        value={values.extraDriverLicence}
+                        onChange={(e) =>
+                          field("extraDriverLicence", e.target.value)
+                        }
+                        required
+                        minLength={4}
+                        maxLength={80}
+                        autoComplete="off"
+                      />
+                    </label>
+                    <p className="field-hint">
+                      They must bring their licence and ID to pickup.
+                    </p>
+                  </>
+                )}
+              </>
+            )}
           </div>
         </Step>
         <Step title="Review">
@@ -580,6 +778,15 @@ export function BookingForm({
                 <dt>Pick-up point</dt>
                 <dd>{values.location}</dd>
               </div>
+              <div>
+                <dt>Service</dt>
+                <dd>
+                  {values.withDriver ? "With an ANLIMA driver" : "Self-drive"}
+                  {values.delivery && " · delivery and collection"}
+                  {values.extraDriver &&
+                    ` · additional driver ${values.extraDriverName}`}
+                </dd>
+              </div>
             </dl>
             <label className="check">
               <input
@@ -605,23 +812,35 @@ export function BookingForm({
       </Stepper>
       {livePricing && (
         <div className="quote reservation-quote">
-          <div>
-            <span>
-              {livePricing.days} day{livePricing.days === 1 ? "" : "s"} ×{" "}
-              {money(livePricing.dailyRate)}
-            </span>
-            <strong>{money(livePricing.rentalAmount)}</strong>
-          </div>
-          {activeOffer && activeOffer.discountAmount > 0 && (
-            <div className="coupon-success">
-              <span>{activeOffer.promotionName}</span>
-              <strong>−{money(activeOffer.discountAmount)}</strong>
-            </div>
+          {activeOffer ? (
+            activeOffer.items.map((item) => (
+              <div
+                key={item.kind}
+                className={item.amount < 0 ? "coupon-success" : undefined}
+              >
+                <span>{item.label}</span>
+                <strong>
+                  {item.amount < 0
+                    ? `−${money(-item.amount)}`
+                    : money(item.amount)}
+                </strong>
+              </div>
+            ))
+          ) : (
+            <>
+              <div>
+                <span>
+                  {livePricing.days} day{livePricing.days === 1 ? "" : "s"} ×{" "}
+                  {money(livePricing.dailyRate)}
+                </span>
+                <strong>{money(livePricing.rentalAmount)}</strong>
+              </div>
+              <div>
+                <span>Refundable deposit</span>
+                <strong>{money(livePricing.deposit)}</strong>
+              </div>
+            </>
           )}
-          <div>
-            <span>Refundable deposit</span>
-            <strong>{money(livePricing.deposit)}</strong>
-          </div>
           <div className="quote-total">
             <span>Total to pay after reserving</span>
             <strong>

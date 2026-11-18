@@ -15,12 +15,8 @@ export function safeAuthRedirect(target: string | null | undefined) {
   return target;
 }
 
-export function isStaffRole(role: unknown) {
-  return (
-    typeof role === "string" &&
-    ["ADMIN", "MANAGER", "AGENT", "FLEET", "FINANCE"].includes(role)
-  );
-}
+import { isStaffRole } from "./permissions";
+export { isStaffRole };
 
 export function accountDestination(role: unknown, requested?: string | null) {
   const target = safeAuthRedirect(requested);

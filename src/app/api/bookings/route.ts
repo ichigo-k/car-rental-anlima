@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { db } from "@/lib/db";
 import { session } from "@/lib/auth";
-import { quote, blockingWhere, overlaps } from "@/lib/pricing";
+import {
+  blockingWhere,
+  overlaps,
+  priceRental,
+  PricingError,
+} from "@/lib/pricing";
+import { getFees } from "@/lib/fees";
 import {
   reservationInput,
   licenceValidThrough,
@@ -29,6 +35,29 @@ export async function POST(req: Request) {
       { error: "Sign in to reserve your vehicle." },
       { status: 401 },
     );
+  // Customers confirm their email and mobile number before booking; the
+  // booking uses the confirmed number, not the one typed into the form.
+  const contact = await db.user.findUnique({
+    where: { id: current.user.id },
+    select: {
+      emailVerified: true,
+      phoneNumber: true,
+      phoneNumberVerified: true,
+    },
+  });
+  if (
+    !contact?.emailVerified ||
+    !contact.phoneNumberVerified ||
+    !contact.phoneNumber
+  )
+    return NextResponse.json(
+      {
+        error: "Confirm your email address and mobile number before booking.",
+        code: "VERIFY_REQUIRED",
+      },
+      { status: 403 },
+    );
+  const confirmedPhone = contact.phoneNumber;
   const parsed = reservationInput.safeParse(await req.json().catch(() => null));
   if (!parsed.success)
     return NextResponse.json(
@@ -43,7 +72,10 @@ export async function POST(req: Request) {
       { error: "Use the email address on your signed-in account." },
       { status: 400 },
     );
-  if (pickup <= new Date() || !licenceValidThrough(v.licenceExpiry, returnAt))
+  if (
+    pickup <= new Date() ||
+    (!v.withDriver && !licenceValidThrough(v.licenceExpiry!, returnAt))
+  )
     return NextResponse.json(
       {
         error:
@@ -82,11 +114,18 @@ export async function POST(req: Request) {
           throw new Error(
             "This vehicle is unavailable for those dates. Choose another vehicle or interval.",
           );
-        const pricing = quote(pickup, returnAt, car.dailyRate, car.deposit);
+        const pricing = priceRental(
+          pickup,
+          returnAt,
+          car,
+          v,
+          await getFees(tx),
+        );
+        // Promotions apply to the rental after the length-of-rental discount.
         const offer = await promotionQuote(
           tx,
           car.id,
-          pricing.rentalAmount,
+          pricing.rentalAmount - pricing.durationDiscount,
           v.couponCode,
           new Date(),
           true,
@@ -104,16 +143,39 @@ export async function POST(req: Request) {
             pickup,
             returnAt,
             location: v.location,
-            phone: v.phone,
+            phone: confirmedPhone,
             customerName: v.customerName,
             customerEmail: current.user.email,
             ghanaCardEncrypted: encryptIdentity(v.ghanaCardNumber),
             ghanaCardLast4: v.ghanaCardNumber.replaceAll("-", "").slice(-4),
-            licenceNumber: v.licenceNumber,
-            licenceExpiry: new Date(v.licenceExpiry),
-            ...pricing,
+            licenceNumber: v.withDriver ? null : v.licenceNumber,
+            licenceExpiry: v.withDriver ? null : new Date(v.licenceExpiry!),
+            deliveryAddress: v.delivery ? v.deliveryAddress : null,
+            extraDriverName: v.extraDriver ? v.extraDriverName : null,
+            extraDriverLicence: v.extraDriver ? v.extraDriverLicence : null,
+            days: pricing.days,
+            dailyRate: pricing.dailyRate,
+            rentalAmount: pricing.rentalAmount,
+            deposit: pricing.deposit,
+            withDriver: pricing.withDriver,
+            durationDiscount: pricing.durationDiscount,
+            extrasAmount: pricing.extrasAmount,
             ...offer,
             total,
+            items: {
+              create: [
+                ...pricing.items,
+                ...(offer.discountAmount
+                  ? [
+                      {
+                        kind: "PROMOTION",
+                        label: offer.promotionName ?? "Offer",
+                        amount: -offer.discountAmount,
+                      },
+                    ]
+                  : []),
+              ],
+            },
             termsVersion: "2026-10-draft",
             termsAcceptedAt: new Date(),
             holdExpiresAt: new Date(
@@ -142,6 +204,7 @@ export async function POST(req: Request) {
       {
         error:
           error instanceof CouponError ||
+          error instanceof PricingError ||
           (error instanceof Error &&
             /^(This vehicle is unavailable|Choose one of|Choose a return time|For rentals longer|Identity storage)/.test(
               error.message,

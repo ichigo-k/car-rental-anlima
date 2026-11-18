@@ -1,9 +1,10 @@
 import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { can } from "@/lib/permissions";
 export const dynamic = "force-dynamic";
 export default async function Audit() {
   const current = await requireStaff();
-  if (!["ADMIN", "MANAGER"].includes(current.user.role))
+  if (!can(current.user.role, "audit.read"))
     return <p>Audit access required.</p>;
   const events = await db.auditEvent.findMany({
     take: 100,
