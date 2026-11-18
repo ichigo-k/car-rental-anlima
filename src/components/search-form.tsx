@@ -1,6 +1,35 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+// iPhone Safari shows an empty date field as blank, so show a hint until a
+// date is chosen.
+function DateField({
+  name,
+  label,
+  initial,
+}: {
+  name: string;
+  label: string;
+  initial?: string;
+}) {
+  const [filled, setFilled] = useState(!!initial);
+  return (
+    <div className={filled ? "date-field has-value" : "date-field"}>
+      <input
+        aria-label={label}
+        type="datetime-local"
+        name={name}
+        defaultValue={initial}
+        required
+        onInput={(e) => setFilled(!!e.currentTarget.value)}
+        onChange={(e) => setFilled(!!e.currentTarget.value)}
+      />
+      <span className="date-hint" aria-hidden="true">
+        Select date &amp; time
+      </span>
+    </div>
+  );
+}
 export function SearchForm({
   initial = {},
 }: {
@@ -64,12 +93,10 @@ export function SearchForm({
         <img src="/images/figma/home-imgLayer1.svg" alt="" />
         <div>
           <span>Pick-up Date</span>
-          <input
-            aria-label="Pick-up date and time"
-            type="datetime-local"
+          <DateField
             name="pickup"
-            defaultValue={initial.pickup}
-            required
+            label="Pick-up date and time"
+            initial={initial.pickup}
           />
         </div>
       </label>
@@ -77,12 +104,10 @@ export function SearchForm({
         <img src="/images/figma/home-imgLayer1.svg" alt="" />
         <div>
           <span>Return Date</span>
-          <input
-            aria-label="Return date and time"
-            type="datetime-local"
+          <DateField
             name="returnAt"
-            defaultValue={initial.returnAt}
-            required
+            label="Return date and time"
+            initial={initial.returnAt}
           />
         </div>
       </label>
