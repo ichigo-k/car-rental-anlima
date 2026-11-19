@@ -16,3 +16,11 @@ test("keeps GPS, staff access and finance apart", () => {
   assert.ok(!can("AGENT", "payment.refund"));
   assert.ok(!can("FLEET", "booking.read"));
 });
+test("only booking staff can change a booking's car or dates", async () => {
+  const { allowed } = await import("../src/lib/booking-lifecycle");
+  assert.ok(allowed("change", "AGENT"));
+  assert.ok(allowed("change", "MANAGER"));
+  assert.ok(!allowed("change", "FINANCE"));
+  assert.ok(!allowed("change", "FLEET"));
+  assert.ok(!allowed("change", "CUSTOMER"));
+});

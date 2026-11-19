@@ -191,6 +191,7 @@ model Booking {
   notifications      Notification[]
   review             Review?
   items              BookingItem[]
+  changes            BookingChange[]
 
   @@index([vehicleId, pickup, returnAt])
   @@index([promotionId])
@@ -337,6 +338,28 @@ model BookingCharge {
   decidedBy  String?
   decidedAt  DateTime?
   createdAt  DateTime  @default(now())
+
+  @@index([bookingId])
+}
+
+// A staff change to a booking's car or dates (Guide AC-05). The amount paid
+// is never rewritten; priceDifference is the rental price of the new
+// arrangement minus the old one (negative: a credit owed to the customer).
+model BookingChange {
+  id              String   @id @default(cuid())
+  bookingId       String
+  booking         Booking  @relation(fields: [bookingId], references: [id])
+  fromVehicleId   String
+  toVehicleId     String
+  fromPickup      DateTime
+  toPickup        DateTime
+  fromReturn      DateTime
+  toReturn        DateTime
+  priceDifference Int
+  chargeId        String?
+  reason          String
+  changedBy       String
+  createdAt       DateTime @default(now())
 
   @@index([bookingId])
 }

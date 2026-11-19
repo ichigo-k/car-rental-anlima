@@ -14,6 +14,7 @@ export const TEMPLATES = [
   "PAYMENT_REVIEW",
   "CANCELLATION_REQUESTED",
   "BOOKING_CANCELLED",
+  "BOOKING_CHANGED",
   "PICKUP_REMINDER",
   "RETURN_REMINDER",
   "RETURN_OVERDUE",
@@ -55,6 +56,10 @@ export function message(
         "The customer asked to cancel this paid booking. Apply the cancellation policy, then cancel it.",
       ],
       BOOKING_CANCELLED: ["Booking cancelled", "This booking was cancelled."],
+      BOOKING_CHANGED: [
+        "Booking changed",
+        "Staff changed this booking's car or dates. The new details are below.",
+      ],
       RETURN_OVERDUE: [
         "Return overdue",
         "This car has not been returned and is past its return time.",
@@ -83,6 +88,20 @@ export function message(
         subject: `Booking ${b.reference} has been cancelled`,
         text: `Hello ${name},\n\nYour booking ${b.reference} (${b.vehicle.name}) has been cancelled. If you paid, our team will contact you about any refund under ANLIMA's cancellation policy.\n\n${manage}`,
         sms: `ANLIMA: Booking ${b.reference} has been cancelled. If you paid, we will contact you about any refund.`,
+      };
+    case "BOOKING_CHANGED":
+      return {
+        subject: `Your ANLIMA booking ${b.reference} has been updated`,
+        text: `Hello ${name},
+
+Your booking ${b.reference} has been updated. The new details are:
+
+${trip}.
+
+If you did not ask for this change, please contact the ANLIMA team.
+
+${manage}`,
+        sms: `ANLIMA: Booking ${b.reference} updated. ${b.vehicle.name}, pickup ${when(b.pickup)}, return ${when(b.returnAt)}.`,
       };
     case "PICKUP_REMINDER":
       return {

@@ -64,19 +64,19 @@ npm run typecheck
 npm run build
 ```
 
-The integration tests use temporary records in your configured database and remove them afterwards:
+The integration tests use temporary records in your configured database and remove them afterwards. They create accounts and bookings, which queue emails and texts, so start the app with `npm run dev:test` rather than `npm run dev`: it sends every email and SMS to a dead local address. The tests refuse to run against a normal dev server when real email or SMS keys are set.
 
 | Command | Covers | App running? |
 | --- | --- | --- |
-| `npm run test:integration` | Accounts, reservations and staff operations | Yes |
-| `npm run test:promotions` | Offers, coupon limits and saved prices | Yes |
-| `npm run test:contact` | Enquiries and access controls | Yes |
+| `npm run test:integration` | Accounts, reservations, booking changes and staff operations | Yes, with `npm run dev:test` |
+| `npm run test:promotions` | Offers, coupon limits and saved prices | Yes, with `npm run dev:test` |
+| `npm run test:contact` | Enquiries and access controls | Yes, with `npm run dev:test` |
 | `npm run test:payments` | Checkout, webhooks and payment verification | No |
 
 The payment tests mock provider responses. They do not charge a card or Mobile Money wallet. Testing actual hosted checkout needs provider test keys and a public webhook URL.
 
 ## Current limits
 
-The sample fleet and contact placeholders need replacing with ANLIMA's actual details. GPS tracking is simulated. Refunds and customer notifications are not automated, and the rental terms are still a draft.
+The Contact page still shows placeholders for ANLIMA's phone, email and address. The rental terms and privacy notice need ANLIMA's approval. Not built yet: inspection photos, refund records, filterable payment and fleet reports, uptime and error monitoring, and geofences.
 
 Keep `.env` out of Git. Set a stable `IDENTITY_ENCRYPTION_SECRET` before storing real Ghana Card records; changing encryption secrets later requires migrating those records. Use an HTTPS `BETTER_AUTH_URL` when deploying.

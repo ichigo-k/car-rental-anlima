@@ -10,6 +10,7 @@ import {
   settlement,
 } from "@/lib/booking-lifecycle";
 import { deliverSoon, queueBookingMessages } from "@/lib/notify";
+import { ChangeError, changeBooking, changeInput } from "@/lib/booking-change";
 const schema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("CANCEL"), reason: reasonInput }),
   z.object({ action: z.literal("NO_SHOW") }),
@@ -20,6 +21,7 @@ const schema = z.discriminatedUnion("action", [
     decision: z.enum(["APPROVED", "WAIVED"]),
   }),
   z.object({ action: z.literal("CLOSE") }),
+  changeInput,
 ]);
 const permission = {
   CANCEL: "cancel",
@@ -27,6 +29,7 @@ const permission = {
   ADD_CHARGE: "proposeCharge",
   DECIDE_CHARGE: "decideCharge",
   CLOSE: "close",
+  CHANGE: "change",
 } as const;
 class LifecycleError extends Error {}
 export async function POST(
@@ -57,6 +60,26 @@ export async function POST(
     );
   const { id } = await params;
   const actorId = current.user.id;
+  if (input.action === "CHANGE") {
+    try {
+      const result = await db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Booking" WHERE id = ${id} FOR UPDATE`;
+        return changeBooking(tx, id, input, actorId);
+      });
+      if (!input.preview) deliverSoon();
+      return NextResponse.json({ ok: true, change: result });
+    } catch (e) {
+      return NextResponse.json(
+        {
+          error:
+            e instanceof ChangeError
+              ? e.message
+              : "Could not change this booking. Please try again.",
+        },
+        { status: 409 },
+      );
+    }
+  }
   try {
     await db.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM "Booking" WHERE id = ${id} FOR UPDATE`;

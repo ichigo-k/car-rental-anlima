@@ -28,6 +28,7 @@ export function canTransition(from: string, to: string) {
 const LIFECYCLE_PERMISSIONS = {
   handover: "booking.write",
   cancel: "booking.write",
+  change: "booking.write",
   noShow: "booking.write",
   proposeCharge: "charge.propose",
   decideCharge: "charge.decide",

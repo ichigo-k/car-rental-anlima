@@ -3,6 +3,8 @@ import { randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
 import { PrismaClient, type FeeSettings } from "@prisma/client";
 import { cookiesFrom, enrolMfa, testPhone, totp } from "./staff-mfa";
+import { requireOfflineProviders } from "./offline-providers";
+requireOfflineProviders();
 const db = new PrismaClient();
 const base = "http://localhost:3000";
 const suffix = randomBytes(6).toString("hex");
@@ -401,6 +403,89 @@ async function main() {
   });
   assert.equal(requested.status, "CONFIRMED", "a paid booking is only flagged");
   assert.ok(requested.cancelRequestedAt);
+  // Staff change to a confirmed booking (Guide AC-05): availability is
+  // rechecked, the paid amount is untouched and the change is logged.
+  const change = (extra: object) =>
+    fetch(`${base}/api/admin/bookings/${created.id}`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ action: "CHANGE", vehicleId: car.id, ...extra }),
+    });
+  const later = (ms: number) => new Date(pickup.getTime() + ms).toISOString();
+  const intoBlock = await change({
+    pickup: later(3600000),
+    returnAt: later(2 * 86400000 + 3600000),
+    preview: true,
+  });
+  assert.equal(intoBlock.status, 200);
+  assert.equal(
+    (await intoBlock.json()).change.available,
+    false,
+    "a change into a maintenance block is not available",
+  );
+  const sameLength = await change({
+    pickup: later(10 * 86400000),
+    returnAt: later(12 * 86400000),
+    preview: true,
+  });
+  const sameLengthPreview = (await sameLength.json()).change;
+  assert.equal(sameLengthPreview.available, true);
+  assert.equal(sameLengthPreview.difference, 0, "same length, same price");
+  assert.equal(
+    (
+      await change({
+        pickup: later(10 * 86400000),
+        returnAt: later(13 * 86400000),
+        reason: "no",
+      })
+    ).status,
+    409,
+    "a change needs a reason",
+  );
+  const longer = await change({
+    pickup: later(10 * 86400000),
+    returnAt: later(13 * 86400000),
+    reason: "Customer extended the trip by a day",
+    chargeDifference: true,
+  });
+  assert.equal(longer.status, 200, await longer.clone().text());
+  const longerResult = (await longer.json()).change;
+  assert.ok(longerResult.difference > 0, "a longer rental costs more");
+  const moved = await db.booking.findUniqueOrThrow({
+    where: { id: created.id },
+    include: { changes: true, charges: true },
+  });
+  assert.equal(moved.pickup.toISOString(), later(10 * 86400000));
+  assert.equal(moved.days, 3);
+  assert.equal(moved.total, requested.total, "the amount paid is unchanged");
+  assert.equal(moved.changes.length, 1);
+  assert.equal(moved.changes[0].priceDifference, longerResult.difference);
+  const changeCharge = moved.charges.find((c) => c.kind === "BOOKING_CHANGE");
+  assert.equal(changeCharge?.amount, longerResult.difference);
+  assert.equal(changeCharge?.status, "PROPOSED");
+  assert.ok(
+    await db.auditEvent.findFirst({
+      where: { entityId: created.id, action: "BOOKING_CHANGED" },
+    }),
+    "the change is in the activity history",
+  );
+  assert.ok(
+    await db.notification.findFirst({
+      where: { bookingId: created.id, template: "BOOKING_CHANGED" },
+    }),
+    "the customer is told about the change",
+  );
+  // Put the booking back so the handover and return checks below are unchanged.
+  await db.bookingCharge.delete({ where: { id: changeCharge!.id } });
+  await db.booking.update({
+    where: { id: created.id },
+    data: {
+      pickup: requested.pickup,
+      returnAt: requested.returnAt,
+      days: requested.days,
+      dailyRate: requested.dailyRate,
+    },
+  });
   const handover = await fetch(`${base}/api/admin/rentals/${created.id}`, {
     method: "POST",
     headers,
@@ -761,7 +846,7 @@ async function main() {
   );
   assert.equal((await signInWith(newPassword)).status, 200);
   console.log(
-    "PASS: authentication, role injection, concurrent booking conflict, pricing, itemised quotes with length-of-rental discounts and extras, hold expiry, GPS/report permissions, origin checks, missing payment key, maintenance blocks, customer cancellation and requests, handover, mileage validation, return, charge approval, admin-set fees and automatic mileage charges, rental closure, customer reviews with approval and featuring, email and phone confirmation before booking, password reset, MFA enforcement and two-step sign-in, staff access management, GPS access audit and audited CSV export.",
+    "PASS: authentication, role injection, concurrent booking conflict, staff booking changes, pricing, itemised quotes with length-of-rental discounts and extras, hold expiry, GPS/report permissions, origin checks, missing payment key, maintenance blocks, customer cancellation and requests, handover, mileage validation, return, charge approval, admin-set fees and automatic mileage charges, rental closure, customer reviews with approval and featuring, email and phone confirmation before booking, password reset, MFA enforcement and two-step sign-in, staff access management, GPS access audit and audited CSV export.",
   );
 }
 main()
@@ -794,6 +879,9 @@ main()
         where: { bookingId: { in: records.map((b) => b.id) } },
       });
       await db.notification.deleteMany({ where: { booking: { vehicleId } } });
+      await db.bookingChange.deleteMany({
+        where: { bookingId: { in: records.map((b) => b.id) } },
+      });
       await db.booking.deleteMany({ where: { vehicleId } });
       await db.vehicleBlock.deleteMany({ where: { vehicleId } });
       await db.vehicle.delete({ where: { id: vehicleId } });

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { money } from "@/lib/catalogue";
+import { BookingChangeForm } from "./booking-change-form";
 import {
   allowed,
   canTransition,
@@ -16,6 +17,8 @@ type Charge = {
   evidence: string | null;
   status: string;
 };
+const label = (kind: string) =>
+  kind.charAt(0) + kind.slice(1).toLowerCase().replaceAll("_", " ");
 export function BookingLifecycle({
   id,
   status,
@@ -26,6 +29,8 @@ export function BookingLifecycle({
   depositApplied,
   presets,
   cancellation,
+  booking,
+  cars,
 }: {
   id: string;
   status: string;
@@ -36,11 +41,13 @@ export function BookingLifecycle({
   depositApplied: number | null;
   presets: Partial<Record<(typeof CHARGE_KINDS)[number], number>>;
   cancellation: { free: boolean; retained: number } | null;
+  booking: { vehicleId: string; pickup: string; returnAt: string };
+  cars: { id: string; name: string }[];
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [form, setForm] = useState<"" | "cancel" | "charge">("");
+  const [form, setForm] = useState<"" | "cancel" | "charge" | "change">("");
   const [kind, setKind] = useState<(typeof CHARGE_KINDS)[number]>("LATE");
   async function send(body: object) {
     setBusy(true);
@@ -65,11 +72,13 @@ export function BookingLifecycle({
     allowed("cancel", role) && canTransition(status, "CANCELLED");
   const canNoShow =
     allowed("noShow", role) && canTransition(status, "NO_SHOW") && pickupPassed;
+  const canChange =
+    allowed("change", role) && ["CONFIRMED", "CHECKED_OUT"].includes(status);
   const chargeable = ["CHECKED_OUT", "RETURNED", "NO_SHOW"].includes(status);
-  const showCharges = chargeable || status === "CLOSED";
+  const showCharges = chargeable || status === "CLOSED" || charges.length > 0;
   const result = settlement(deposit, charges);
   const canClose = allowed("close", role) && canTransition(status, "CLOSED");
-  if (!canCancel && !canNoShow && !showCharges) return null;
+  if (!canCancel && !canNoShow && !showCharges && !canChange) return null;
   return (
     <div className="booking-lifecycle">
       {showCharges && (
@@ -81,8 +90,7 @@ export function BookingLifecycle({
                 <li key={c.id}>
                   <div>
                     <strong>
-                      {c.kind.charAt(0) + c.kind.slice(1).toLowerCase()} ·{" "}
-                      {money(c.amount)}
+                      {label(c.kind)} · {money(c.amount)}
                     </strong>
                     <span
                       className={`charge-status charge-status--${c.status.toLowerCase()}`}
@@ -149,6 +157,14 @@ export function BookingLifecycle({
             Add charge
           </button>
         )}
+        {canChange && form !== "change" && (
+          <button
+            className="button small secondary"
+            onClick={() => setForm("change")}
+          >
+            {status === "CHECKED_OUT" ? "Change return time" : "Change booking"}
+          </button>
+        )}
         {canNoShow && (
           <button
             className="button small secondary"
@@ -181,6 +197,15 @@ export function BookingLifecycle({
           </button>
         )}
       </div>
+      {form === "change" && (
+        <BookingChangeForm
+          id={id}
+          onRoad={status === "CHECKED_OUT"}
+          {...booking}
+          cars={cars}
+          onClose={() => setForm("")}
+        />
+      )}
       {form === "cancel" && (
         <form
           className="stack"
@@ -240,7 +265,7 @@ export function BookingLifecycle({
             >
               {CHARGE_KINDS.map((k) => (
                 <option key={k} value={k}>
-                  {k.charAt(0) + k.slice(1).toLowerCase()}
+                  {label(k)}
                 </option>
               ))}
             </select>

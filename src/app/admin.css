@@ -1158,3 +1158,28 @@
     height: 420px;
   }
 }
+/* Staff change to a booking's car or dates. */
+.booking-change {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #e2e9ee;
+}
+.change-preview {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  background: #f3f6f7;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.change-preview p {
+  margin: 0;
+}
+.admin-shell .change-preview .check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.admin-shell .change-preview .check input {
+  width: auto;
+}

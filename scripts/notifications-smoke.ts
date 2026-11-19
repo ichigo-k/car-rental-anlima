@@ -60,7 +60,9 @@ async function main() {
     "SMSONLINEGH_SENDER",
     "OPERATIONS_EMAIL",
   ])
-    delete process.env[key];
+    // Blank rather than delete: loading .env never overwrites a variable that
+    // exists, so real keys in .env cannot come back.
+    process.env[key] = "";
   process.env.RESEND_BASE_URL = base;
   process.env.SMSONLINEGH_BASE_URL = base;
   const { queueBookingMessages, deliverQueued, queueAuthMessage } =

@@ -71,8 +71,12 @@ export default async function Reservations({
     Math.min(10000, Number.parseInt(q.page ?? "1", 10) || 1),
   );
   const pageSize = 20;
-  const [fees, [bookings, count]] = await Promise.all([
+  const [fees, cars, [bookings, count]] = await Promise.all([
     getFees(db),
+    db.vehicle.findMany({
+      select: { id: true, name: true, status: true },
+      orderBy: { name: "asc" },
+    }),
     Promise.all([
       db.booking.findMany({
         where,
@@ -81,6 +85,7 @@ export default async function Reservations({
           vehicle: true,
           inspections: true,
           charges: { orderBy: { createdAt: "asc" } },
+          changes: { orderBy: { createdAt: "asc" } },
         },
         orderBy: { createdAt: "desc" },
         take: pageSize,
@@ -268,6 +273,14 @@ export default async function Reservations({
                     ? cancellationTerms(fees, b, now)
                     : null
                 }
+                booking={{
+                  vehicleId: b.vehicleId,
+                  pickup: b.pickup.toISOString(),
+                  returnAt: b.returnAt.toISOString(),
+                }}
+                cars={cars.filter(
+                  (c) => c.status === "AVAILABLE" || c.id === b.vehicleId,
+                )}
                 charges={b.charges.map((c) => ({
                   id: c.id,
                   kind: c.kind,
@@ -277,6 +290,35 @@ export default async function Reservations({
                   status: c.status,
                 }))}
               />
+              {b.changes.length > 0 && (
+                <details className="admin-inspections">
+                  <summary>Change history ({b.changes.length})</summary>
+                  {b.changes.map((c) => {
+                    const name = (vid: string) =>
+                      cars.find((v) => v.id === vid)?.name ?? "Unknown car";
+                    const at = (d: Date) =>
+                      d.toLocaleString("en-GB", {
+                        timeZone: "Africa/Accra",
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      });
+                    return (
+                      <p key={c.id}>
+                        {at(c.createdAt)}: {name(c.fromVehicleId)},{" "}
+                        {at(c.fromPickup)} to {at(c.fromReturn)} →{" "}
+                        {name(c.toVehicleId)}, {at(c.toPickup)} to{" "}
+                        {at(c.toReturn)}.{" "}
+                        {c.priceDifference > 0
+                          ? `${money(c.priceDifference)} more${c.chargeId ? ", added as a charge" : ", not charged"}.`
+                          : c.priceDifference < 0
+                            ? `${money(-c.priceDifference)} credit owed to the customer.`
+                            : "Same price."}{" "}
+                        Reason: {c.reason}
+                      </p>
+                    );
+                  })}
+                </details>
+              )}
               <details className="admin-inspections">
                 <summary>Inspection history ({b.inspections.length})</summary>
                 {b.inspections.length ? (

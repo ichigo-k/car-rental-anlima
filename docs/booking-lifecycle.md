@@ -17,9 +17,19 @@ Statuses follow the Developer Guide §5 and §7. Rules live in `src/lib/booking-
 
 ## Who can do what
 
-- Agents, managers and admins record handover and return, cancel, mark no-shows and propose charges.
+- Agents, managers and admins record handover and return, change bookings, cancel, mark no-shows and propose charges.
 - Finance, managers and admins approve or waive charges and close rentals.
 - Customers cancel unpaid holds themselves. For a confirmed booking they send a cancellation request, which appears on the admin dashboard; staff apply the cancellation policy and cancel.
+
+## Changing a booking
+
+Staff can move a confirmed booking to other dates or another car, and change the return time of a car already on the road (Guide AC-05). The rules are in `src/lib/booking-change.ts`.
+
+- **Check first:** the form checks availability and shows the price difference before anything is saved. Availability uses the same rule as customer bookings (other bookings holding the car and maintenance blocks), ignoring the booking being changed, with the car's row locked.
+- **The amount paid never changes.** The difference is the rental price of the new arrangement (same driver option, extras and any promotion discount already given) minus the old one:
+  - **More:** staff can add the difference as a "Booking change" charge, approved and settled at return like other charges.
+  - **Less:** the credit owed to the customer is recorded on the change.
+- **Records:** every change needs a reason. It is stored in its own history (before and after, who, why, price difference), shown on the booking, and added to the activity history. The customer gets an email and SMS with the new details.
 
 ## Charges and deposit
 

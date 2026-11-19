@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 import { enrolMfa, testPhone } from "./staff-mfa";
+import { requireOfflineProviders } from "./offline-providers";
+requireOfflineProviders();
 const db = new PrismaClient({
   transactionOptions: { maxWait: 15000, timeout: 30000 },
 });

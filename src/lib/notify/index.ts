@@ -15,6 +15,7 @@ const CUSTOMER_SMS: Template[] = [
   "BOOKING_CONFIRMED",
   "PAYMENT_REVIEW",
   "BOOKING_CANCELLED",
+  "BOOKING_CHANGED",
   "PICKUP_REMINDER",
   "RETURN_REMINDER",
   "RETURN_OVERDUE",
@@ -23,12 +24,14 @@ export const MAX_ATTEMPTS = 5;
 
 // Queues a booking's messages in the caller's transaction. The dedupe key
 // makes each (template, booking, audience, channel) message unique, so
-// retries and repeated reminder runs never send it twice.
+// retries and repeated reminder runs never send it twice. Events that can
+// happen more than once per booking pass their own key.
 export async function queueBookingMessages(
   tx: Writer,
   bookingId: string,
   template: Template,
   audiences: Audience[] = ["customer", "operations"],
+  key?: string,
 ) {
   const b = await tx.booking.findUnique({
     where: { id: bookingId },
@@ -44,7 +47,7 @@ export async function queueBookingMessages(
     const m = message(template, audience, b);
     if (!m || !recipient) return;
     rows.push({
-      dedupeKey: `${template}:${b.id}:${audience}:${channel}`,
+      dedupeKey: `${template}:${b.id}:${key ? `${key}:` : ""}${audience}:${channel}`,
       bookingId: b.id,
       template,
       channel,
