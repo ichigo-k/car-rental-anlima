@@ -14,6 +14,13 @@ import {
 import { db } from "@/lib/db";
 import { Testimonials } from "@/components/testimonials";
 import { publicReviews } from "@/lib/reviews";
+import type { Metadata } from "next";
+import { publicPage } from "@/lib/seo";
+export const metadata: Metadata = publicPage(
+  undefined,
+  "Rent a car in Accra with ANLIMA. Compare saloons, SUVs, pickups and executive cars, see the full price up front and book online with secure payment.",
+  "/",
+);
 export const dynamic = "force-dynamic";
 const heroFont = Poppins({
   subsets: ["latin"],

@@ -3,7 +3,12 @@ import Image from "next/image";
 import { Footer } from "@/components/header";
 import { MarketingHero, MarketingCta } from "@/components/anlima-pages";
 import { SectionHeading } from "@/components/marketing-sections";
-export const metadata: Metadata = { title: "About Us" };
+import { publicPage } from "@/lib/seo";
+export const metadata: Metadata = publicPage(
+  "About Us",
+  "ANLIMA Car Rental makes it easier to find and book a reliable car in Accra, for everyday travel, business and special occasions.",
+  "/about",
+);
 const values = [
   [
     "Integrity",

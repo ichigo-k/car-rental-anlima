@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { AuthCard } from "@/components/auth-card";
 import { ForgotPassword } from "@/components/forgot-password";
-export const metadata: Metadata = { title: "Reset your password" };
+import { privatePage } from "@/lib/seo";
+export const metadata: Metadata = privatePage("Reset your password");
 export default function Forgot() {
   return (
     <AuthCard

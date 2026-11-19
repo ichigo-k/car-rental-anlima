@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Header, Footer } from "@/components/header";
@@ -8,8 +9,27 @@ import { isStaffRole } from "@/lib/auth-redirect";
 import { FavouriteButton } from "@/components/favourites";
 import { VehicleImage } from "@/components/vehicle-image";
 import { money } from "@/lib/catalogue";
+import { privatePage, publicPage } from "@/lib/seo";
 import { Users, SteeringWheel, GasPump, ArrowLeft } from "@/components/icons";
 export const dynamic = "force-dynamic";
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const car = await db.vehicle.findUnique({ where: { slug } });
+  if (!car || car.status === "INACTIVE") return privatePage();
+  return publicPage(
+    `${car.name} Rental in Accra`,
+    `Rent the ${car.name} in Accra from ${money(car.dailyRate)} a day. ${car.description}`.slice(
+      0,
+      300,
+    ),
+    `/fleet/${car.slug}`,
+    car.image,
+  );
+}
 export default async function Detail({
   params,
   searchParams,

@@ -6,8 +6,9 @@ import { session } from "@/lib/auth";
 import { isStaffRole } from "@/lib/permissions";
 import { MfaSetup } from "@/components/mfa-setup";
 import { SignOut } from "@/components/sign-out";
+import { privatePage } from "@/lib/seo";
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Secure your staff account" };
+export const metadata: Metadata = privatePage("Secure your staff account");
 export default async function StaffSecurity() {
   const current = await session();
   if (!current) redirect("/sign-in?next=/staff-security");

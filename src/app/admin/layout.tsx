@@ -5,6 +5,9 @@ import Image from "next/image";
 import { AdminNav } from "@/components/admin-nav";
 import { SignOut } from "@/components/sign-out";
 import { can, isStaffRole, ROLE_LABELS } from "@/lib/permissions";
+import type { Metadata } from "next";
+import { privatePage } from "@/lib/seo";
+export const metadata: Metadata = privatePage();
 export default async function AdminLayout({
   children,
 }: {

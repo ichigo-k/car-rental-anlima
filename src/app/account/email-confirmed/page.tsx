@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { session } from "@/lib/auth";
 import { safeAuthRedirect } from "@/lib/auth-redirect";
 import { AuthCard } from "@/components/auth-card";
+import { privatePage } from "@/lib/seo";
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Email confirmed" };
+export const metadata: Metadata = privatePage("Email confirmed");
 // Where the confirmation link in the sign-up email lands. Better Auth adds
 // ?error=… when the link has expired or was already used.
 export default async function EmailConfirmed({

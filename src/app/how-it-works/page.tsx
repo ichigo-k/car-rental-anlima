@@ -4,7 +4,12 @@ import { Footer } from "@/components/header";
 import { MarketingHero, MarketingCta } from "@/components/anlima-pages";
 import { SectionHeading } from "@/components/marketing-sections";
 import { StartTourButton } from "@/components/booking-tour";
-export const metadata: Metadata = { title: "How It Works" };
+import { publicPage } from "@/lib/seo";
+export const metadata: Metadata = publicPage(
+  "How It Works",
+  "How to rent a car with ANLIMA in Accra: choose a car and dates, confirm your details, pay securely online and collect your car.",
+  "/how-it-works",
+);
 const steps = [
   [
     "Find Your Perfect Ride",

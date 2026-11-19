@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthCard } from "@/components/auth-card";
 import { ResetPassword } from "@/components/forgot-password";
+import { privatePage } from "@/lib/seo";
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Choose a new password" };
+export const metadata: Metadata = privatePage("Choose a new password");
 export default async function Reset({
   searchParams,
 }: {

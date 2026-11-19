@@ -4,8 +4,9 @@ import { session } from "@/lib/auth";
 import { safeAuthRedirect } from "@/lib/auth-redirect";
 import { AuthCard } from "@/components/auth-card";
 import { VerifyAccount } from "@/components/verify-account";
+import { privatePage } from "@/lib/seo";
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Verify your account" };
+export const metadata: Metadata = privatePage("Verify your account");
 export default async function Verify({
   searchParams,
 }: {

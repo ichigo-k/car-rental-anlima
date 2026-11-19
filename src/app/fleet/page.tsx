@@ -9,6 +9,13 @@ import { VehicleCard } from "@/components/vehicle-card";
 import { SearchForm } from "@/components/search-form";
 import { db } from "@/lib/db";
 import { quote, blockingWhere, overlaps } from "@/lib/pricing";
+import type { Metadata } from "next";
+import { publicPage } from "@/lib/seo";
+export const metadata: Metadata = publicPage(
+  "Cars for Rent in Accra",
+  "Browse ANLIMA's rental cars in Accra: saloons, SUVs, pickups and executive cars, self-drive or with a driver. Check availability and daily rates online.",
+  "/fleet",
+);
 export const dynamic = "force-dynamic";
 export default async function Fleet({
   searchParams,

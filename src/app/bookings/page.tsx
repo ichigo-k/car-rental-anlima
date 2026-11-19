@@ -12,6 +12,9 @@ import { paymentOptions } from "@/lib/payment-config";
 import { paymentNoticeState } from "@/lib/payment-options";
 import { money } from "@/lib/catalogue";
 import { isStaffRole } from "@/lib/auth-redirect";
+import type { Metadata } from "next";
+import { privatePage } from "@/lib/seo";
+export const metadata: Metadata = privatePage("My bookings");
 export const dynamic = "force-dynamic";
 export default async function Bookings({
   searchParams,
