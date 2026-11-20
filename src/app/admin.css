@@ -1259,3 +1259,35 @@
   gap: 8px;
   margin-bottom: 14px;
 }
+/* Refunds on the payments page. */
+.refund-controls {
+  display: grid;
+  gap: 8px;
+  min-width: 220px;
+  white-space: normal;
+}
+.refund-row {
+  display: grid;
+  gap: 2px;
+  font-size: 12px;
+}
+.refund-row small {
+  color: #647181;
+}
+.refund-processed span {
+  color: #12612f;
+}
+.refund-failed span {
+  color: #9a1c13;
+}
+.refund-unknown span {
+  color: #7a5a00;
+  font-weight: 600;
+}
+.refund-resolve {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  background: #fbf5e2;
+  border-radius: 8px;
+}

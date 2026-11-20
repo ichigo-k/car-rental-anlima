@@ -8,6 +8,11 @@ import { verifyFlutterwave } from "../src/lib/flutterwave";
 import { checkBookingPayment } from "../src/lib/payment-status";
 import { POST as paystackWebhook } from "../src/app/api/webhooks/paystack/route";
 import { POST as flutterwaveWebhook } from "../src/app/api/webhooks/flutterwave/route";
+import {
+  issueRefund,
+  refreshPendingRefunds,
+  resolveRefund,
+} from "../src/lib/refunds";
 type Charge = {
   provider: string;
   reference: string;
@@ -27,6 +32,11 @@ const previous = Object.fromEntries(keys.map((k) => [k, process.env[k]]));
 const charges = new Map<string, Charge>();
 const initializations: Record<string, unknown>[] = [];
 let initializationFails = false;
+// Refunds at the stand-in providers: how the next request behaves, what was
+// asked for, and each refund's status there.
+let refundMode: "ok" | "decline" | "timeout" | "error" = "ok";
+const refundRequests: { url: string; body: any }[] = [];
+const providerRefunds = new Map<string, { status: string }>();
 let userId: string | undefined, vehicleId: string | undefined;
 const suffix = randomUUID().slice(0, 10);
 async function main() {
@@ -39,6 +49,45 @@ async function main() {
       ["api.paystack.co", "api.flutterwave.com"].includes(url.hostname),
       "Unexpected external request in mocked payment test",
     );
+    const refundCreate =
+      (url.hostname === "api.paystack.co" && url.pathname === "/refund") ||
+      /^\/v3\/transactions\/\d+\/refund$/.test(url.pathname);
+    if (refundCreate) {
+      refundRequests.push({
+        url: url.pathname,
+        body: JSON.parse(String(init?.body)),
+      });
+      if (refundMode === "timeout") throw new Error("socket hang up");
+      if (refundMode === "error") return Response.json({}, { status: 502 });
+      if (refundMode === "decline")
+        return Response.json(
+          { status: false, message: "Transaction has been fully reversed" },
+          { status: 400 },
+        );
+      const id = String(70000 + providerRefunds.size);
+      const paystack = url.hostname === "api.paystack.co";
+      providerRefunds.set(id, { status: paystack ? "pending" : "completed" });
+      return Response.json(
+        paystack
+          ? { status: true, data: { id: Number(id), status: "pending" } }
+          : {
+              status: "success",
+              data: { id: Number(id), status: "completed" },
+            },
+      );
+    }
+    const refundLookup =
+      /^\/refund\/\d+$/.test(url.pathname) ||
+      /^\/v3\/refunds\/\d+$/.test(url.pathname);
+    if (refundLookup) {
+      const refund = providerRefunds.get(url.pathname.split("/").pop()!);
+      assert(refund, "Unknown mocked refund");
+      return Response.json(
+        url.hostname === "api.paystack.co"
+          ? { status: true, data: { status: refund.status } }
+          : { status: "success", data: { status: refund.status } },
+      );
+    }
     if (
       url.pathname.endsWith("/initialize") ||
       url.pathname === "/v3/payments"
@@ -344,8 +393,123 @@ async function main() {
       (await checkBookingPayment(manual.reference, userId)).status,
       "CONFIRMED",
     );
+    // Refunds go back through the provider that took the payment (Guide §5).
+    const actorId = userId!;
+    const paid = await db.payment.findUniqueOrThrow({
+      where: { reference: paystack.reference },
+    });
+    const refund = (amount: number, paymentId = paid.id) =>
+      issueRefund({ paymentId, amount, reason: "Refund test", actorId });
+    await assert.rejects(refund(paid.amount + 1), /At most/);
+    const failedPayment = await db.payment.findFirstOrThrow({
+      where: { bookingId: failed.id },
+    });
+    await assert.rejects(refund(100, failedPayment.id), /Only verified/);
+    const partial = await refund(20000);
+    assert.equal(partial.status, "PENDING");
+    assert.deepEqual(refundRequests.at(-1)!.body, {
+      transaction: paystack.reference,
+      amount: 20000,
+      merchant_note: "Refund test",
+    });
+    assert.ok(
+      await db.notification.findFirst({
+        where: { dedupeKey: { startsWith: `REFUND_STARTED:${partial.id}:` } },
+      }),
+      "the customer is told a refund has started",
+    );
+    providerRefunds.get(partial.providerRefundId!)!.status = "processed";
+    const refundEvent = JSON.stringify({ event: "refund.processed", data: {} });
+    assert.equal(
+      (
+        await paystackWebhook(
+          new Request("http://localhost/api/webhooks/paystack", {
+            method: "POST",
+            headers: {
+              "x-paystack-signature": createHmac(
+                "sha512",
+                process.env.PAYSTACK_SECRET_KEY,
+              )
+                .update(refundEvent)
+                .digest("hex"),
+            },
+            body: refundEvent,
+          }),
+        )
+      ).status,
+      200,
+    );
+    assert.equal(
+      (await db.refund.findUniqueOrThrow({ where: { id: partial.id } })).status,
+      "PROCESSED",
+      "a Paystack refund event prompts a status check",
+    );
+    refundMode = "timeout";
+    const lost = await refund(10000);
+    assert.equal(
+      lost.status,
+      "UNKNOWN",
+      "a lost answer is not assumed either way",
+    );
+    refundMode = "ok";
+    await assert.rejects(refund(1000), /still being confirmed/);
+    await resolveRefund({ refundId: lost.id, sent: false, actorId });
+    refundMode = "error";
+    assert.equal(
+      (await refund(5000)).status,
+      "UNKNOWN",
+      "a provider error is unconfirmed",
+    );
+    await resolveRefund({
+      refundId: (
+        await db.refund.findFirstOrThrow({
+          where: { paymentId: paid.id, status: "UNKNOWN" },
+        })
+      ).id,
+      sent: false,
+      actorId,
+    });
+    refundMode = "decline";
+    await assert.rejects(refund(5000), /fully reversed/);
+    refundMode = "ok";
+    const rest = await refund(paid.amount - 20000);
+    assert.equal(
+      rest.status,
+      "PENDING",
+      "failed refunds do not use up the amount",
+    );
+    await assert.rejects(refund(1), /At most/);
+    assert.equal(
+      (await db.payment.findUniqueOrThrow({ where: { id: paid.id } })).status,
+      "SUCCESS",
+      "the original payment record is unchanged",
+    );
+    const flwPaid = await db.payment.findFirstOrThrow({
+      where: { bookingId: manual.id, status: "SUCCESS" },
+    });
+    const flw = await refund(12345, flwPaid.id);
+    assert.match(
+      refundRequests.at(-1)!.url,
+      /^\/v3\/transactions\/\d+\/refund$/,
+    );
+    assert.equal(
+      refundRequests.at(-1)!.body.amount,
+      123.45,
+      "Flutterwave takes cedis",
+    );
+    assert.equal(
+      flw.status,
+      "PENDING",
+      "Flutterwave 'completed' is not yet paid out",
+    );
+    providerRefunds.get(flw.providerRefundId!)!.status = "completed-momo";
+    await refreshPendingRefunds("FLUTTERWAVE");
+    assert.equal(
+      (await db.refund.findUniqueOrThrow({ where: { id: flw.id } })).status,
+      "PROCESSED",
+    );
     console.log(
-      "PASS: both hosted checkouts, exact discounted totals, GHS conversion, ownership, signed webhooks, amount/currency/reference rejection, idempotency, expiry, availability, cross-provider duplicate protection, initialization failures, and manual verification. Provider requests were mocked; no charge was made.",
+      "PASS: both hosted checkouts, exact discounted totals, GHS conversion, ownership, signed webhooks, amount/currency/reference rejection, idempotency, expiry, availability, cross-provider duplicate protection, initialization failures, manual verification, and refunds (limits, partial refunds, status checks, lost answers, declines, Flutterwave units). Provider requests were mocked; no charge or refund was made.",
     );
   } finally {
     globalThis.fetch = originalFetch;
@@ -360,6 +524,9 @@ async function main() {
       });
       await db.auditEvent.deleteMany({
         where: { entityId: { in: bookings.map((b) => b.id) } },
+      });
+      await db.refund.deleteMany({
+        where: { bookingId: { in: bookings.map((b) => b.id) } },
       });
       await db.payment.deleteMany({
         where: { bookingId: { in: bookings.map((b) => b.id) } },

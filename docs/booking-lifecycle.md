@@ -49,7 +49,7 @@ Administrators set the fee schedule at `/admin/settings` (rules in `src/lib/fees
 
 When staff cancel a paid booking, the cancellation form shows the refund due under the saved cancellation window and percentage. The deposit is always refundable.
 
-A rental closes only when no charge is awaiting a decision. Approved charges are taken from the deposit first; the rest of the deposit is refunded, and any excess is shown as owed by the customer. Refund payments themselves are recorded separately.
+A rental closes only when no charge is awaiting a decision. Approved charges are taken from the deposit first; the rest of the deposit is refunded, and any excess is shown as owed by the customer. The money itself is returned from the Payments page; see `docs/refunds.md`.
 
 ## Migration note
 

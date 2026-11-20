@@ -52,7 +52,7 @@ A reservation holds a car for 15 minutes. The customer chooses one of that car's
 
 Payment options stay disabled until their keys are configured. Start with test keys. The [payment setup guide](docs/payments.md) covers the environment variables, webhooks and test flow for both providers.
 
-Late payments and duplicate charges go to staff review. Refunds are handled in the payment provider's dashboard.
+Late payments and duplicate charges go to staff review. Finance staff refund payments from `/admin/payments`; the money goes back through Paystack or Flutterwave (see `docs/refunds.md`).
 
 Promotions can apply automatically or use a coupon code. They can cover the whole fleet or selected cars. Discounts apply to the rental charge, not the refundable deposit.
 
@@ -77,6 +77,6 @@ The payment tests mock provider responses. They do not charge a card or Mobile M
 
 ## Current limits
 
-The Contact page still shows placeholders for ANLIMA's phone, email and address. The rental terms and privacy notice need ANLIMA's approval. Not built yet: refund records, filterable payment and fleet reports, uptime and error monitoring, and geofences.
+The Contact page still shows placeholders for ANLIMA's phone, email and address. The rental terms and privacy notice need ANLIMA's approval. Not built yet: filterable payment and fleet reports, uptime and error monitoring, and geofences.
 
 Keep `.env` out of Git. Set a stable `IDENTITY_ENCRYPTION_SECRET` before storing real Ghana Card records; changing encryption secrets later requires migrating those records. Use an HTTPS `BETTER_AUTH_URL` when deploying.

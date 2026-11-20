@@ -193,6 +193,7 @@ model Booking {
   items              BookingItem[]
   changes            BookingChange[]
   photos             InspectionPhoto[]
+  refunds            Refund[]
 
   @@index([vehicleId, pickup, returnAt])
   @@index([promotionId])
@@ -224,6 +225,34 @@ model Payment {
   provider   String    @default("PAYSTACK")
   verifiedAt DateTime?
   createdAt  DateTime  @default(now())
+  refunds    Refund[]
+}
+
+// Money sent back through the payment provider (Guide §5), kept separate from
+// the original payment, which is never changed. REQUESTED: recorded, request
+// in flight. PENDING: accepted by the provider. PROCESSED: completed. FAILED:
+// not sent. UNKNOWN: the provider's answer was lost; staff must check the
+// provider before the payment can be refunded again.
+model Refund {
+  id               String    @id @default(cuid())
+  paymentId        String
+  payment          Payment   @relation(fields: [paymentId], references: [id])
+  bookingId        String
+  booking          Booking   @relation(fields: [bookingId], references: [id])
+  amount           Int
+  reason           String
+  status           String    @default("REQUESTED")
+  providerRefundId String?
+  providerStatus   String?
+  lastError        String?
+  requestedBy      String
+  processedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([paymentId])
+  @@index([bookingId])
+  @@index([status])
 }
 
 // One review per returned rental. Customers write it; staff approve, hide
