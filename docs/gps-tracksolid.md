@@ -35,4 +35,18 @@ Then open **Fleet tracking → Link trackers to cars** and choose the tracker fo
 
 `npm run test:gps` checks the client against a local stand-in for the API (no request reaches Tracksolid). With real keys, open the tracking page and confirm the trackers list loads and a linked car shows a position. Two details the public docs leave open, request encoding and the expired-token code, are handled as form-encoded requests and code 1004; adjust `src/lib/tracksolid.ts` if the live API differs.
 
-Route history (Guide FR-019) is on the live map. Geofences (FR-020) are not built yet.
+Route history (Guide FR-019) is on the live map; geofences (FR-020) are described below.
+
+## Geofences
+
+Administrators, managers and fleet officers draw geofences on **Fleet tracking → Geofences** (Guide FR-020). Rules are in `src/lib/geofences.ts`.
+
+- **Allowed area:** alert when a car leaves, for example Greater Accra.
+- **No-go area:** alert when a car enters.
+- **Shape:** an area outlined by clicking points on the map, or a circle around a point with a radius.
+- **Which cars:** all tracked cars, or chosen ones.
+- **When:** always, or only while a car is out on a rental.
+
+Positions are checked every time tracking data arrives: on the scheduled job (every 10 minutes) and every 15 seconds while staff have the live map open. Only real tracker data is checked; simulated positions never raise alerts. Each car's last state in each area is remembered, so only a crossing raises an event; a newly drawn area records nothing for cars already within the rules.
+
+A breach (leaving an allowed area or entering a no-go area) is listed under **Geofence alerts** for staff to acknowledge, and emailed to the operations inbox with the car, any booking and a map link. Returning within the rules is listed without an alert. Every change to a geofence and every acknowledgement is in the activity history.

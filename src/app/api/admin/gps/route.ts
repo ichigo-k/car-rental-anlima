@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { auditGpsView, fleetPositions } from "@/lib/gps";
+import { evaluateGeofences } from "@/lib/geofences";
 export async function GET() {
   let current;
   try {
@@ -13,6 +14,9 @@ export async function GET() {
     select: { id: true, gpsImei: true },
   });
   const snapshot = await fleetPositions(cars);
+  // Real tracker data only; simulated positions never raise alerts.
+  if (snapshot.source === "tracksolid")
+    await evaluateGeofences(db, snapshot.positions).catch(() => 0);
   await auditGpsView(
     current.user.id,
     "gps-api",

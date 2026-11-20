@@ -482,3 +482,57 @@ model CustomerDocument {
   @@unique([userId, kind])
   @@index([status])
 }
+
+// An area set by staff on the tracking map (Guide FR-020). ALLOWED: alert when
+// a car leaves it. RESTRICTED: alert when a car enters it. A circle uses the
+// centre and radius; a polygon uses points ([[lat, lng], ...]). Empty
+// vehicleIds means every tracked car. ON_RENTAL fences apply only while a car
+// is out on a rental.
+model Geofence {
+  id          String          @id @default(cuid())
+  name        String
+  kind        String
+  shape       String
+  centerLat   Float?
+  centerLng   Float?
+  radiusM     Int?
+  points      Json?
+  vehicleIds  String[]        @default([])
+  appliesWhen String          @default("ALWAYS")
+  active      Boolean         @default(true)
+  createdBy   String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  states      GeofenceState[]
+  events      GeofenceEvent[]
+}
+
+// Whether each car was last seen inside each fence, to detect crossings.
+model GeofenceState {
+  geofenceId String
+  geofence   Geofence @relation(fields: [geofenceId], references: [id], onDelete: Cascade)
+  vehicleId  String
+  inside     Boolean
+  updatedAt  DateTime @updatedAt
+
+  @@id([geofenceId, vehicleId])
+}
+
+// A car leaving an allowed area or entering a restricted one.
+model GeofenceEvent {
+  id             String    @id @default(cuid())
+  geofenceId     String
+  geofence       Geofence  @relation(fields: [geofenceId], references: [id], onDelete: Cascade)
+  vehicleId      String
+  bookingId      String?
+  type           String
+  latitude       Float
+  longitude      Float
+  at             DateTime
+  acknowledgedBy String?
+  acknowledgedAt DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([acknowledgedAt])
+  @@index([createdAt])
+}

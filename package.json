@@ -20,6 +20,7 @@
     "test:notifications": "tsx scripts/notifications-smoke.ts",
     "test:assistant": "tsx scripts/assistant-smoke.ts",
     "test:monitoring": "tsx scripts/monitoring-smoke.ts",
+    "test:geofences": "tsx scripts/geofence-smoke.ts",
     "format": "prettier --write src scripts tests prisma/seed.ts docs"
   },
   "dependencies": {

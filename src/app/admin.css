@@ -1483,3 +1483,96 @@
   background: #f7edce;
   color: #7a5a00;
 }
+/* Geofences. */
+.geofence-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px;
+  display: grid;
+  gap: 10px;
+}
+.geofence-list li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #e2e9ee;
+  border-radius: 10px;
+}
+.geofence-list li > span:first-child {
+  display: grid;
+  gap: 2px;
+}
+.geofence-list small {
+  color: #647181;
+  font-size: 12px;
+}
+.geofence-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.geofence-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+}
+.geofence-editor-map > div:first-child {
+  height: 460px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #dce2e8;
+  cursor: crosshair;
+  z-index: 0;
+}
+.geofence-editor-map p {
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+.geofence-point-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 6px;
+}
+.geofence-cars {
+  border: 1px solid #e2e9ee;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 6px;
+  max-height: 200px;
+  overflow: auto;
+}
+.geofence-cars legend {
+  font-size: 12px;
+  padding: 0 4px;
+}
+.admin-shell .stack .geofence-cars label,
+.admin-shell .stack label.geofence-active {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+}
+.admin-shell .stack .geofence-cars input,
+.admin-shell .stack label.geofence-active input {
+  width: auto;
+  min-height: 0;
+  margin: 0;
+}
+tr.geofence-open td {
+  background: #fdf0ee;
+}
+@media (max-width: 900px) {
+  .geofence-editor {
+    grid-template-columns: 1fr;
+  }
+  .geofence-editor-map > div:first-child {
+    height: 360px;
+  }
+}

@@ -9,6 +9,9 @@ import { listDevices, tracksolidConfig } from "@/lib/tracksolid";
 import { can } from "@/lib/permissions";
 import { GpsMapping } from "@/components/gps-mapping";
 import { FleetLiveMap } from "@/components/fleet-live-map";
+import { GeofenceManager, type Fence } from "@/components/geofence-manager";
+import { AcknowledgeAlert } from "@/components/acknowledge-alert";
+import { isBreach } from "@/lib/geofences";
 export const dynamic = "force-dynamic";
 const label: Record<GpsPosition["freshness"], string> = {
   LIVE: "Live",
@@ -37,6 +40,42 @@ export default async function Tracking({
     select: { id: true, name: true, gpsImei: true },
     orderBy: { name: "asc" },
   });
+  const [fenceRows, events] = await Promise.all([
+    db.geofence.findMany({ orderBy: { createdAt: "asc" } }),
+    db.geofenceEvent.findMany({
+      orderBy: [
+        { acknowledgedAt: { sort: "asc", nulls: "first" } },
+        { at: "desc" },
+      ],
+      take: 30,
+      include: { geofence: { select: { name: true, kind: true } } },
+    }),
+  ]);
+  const fences: Fence[] = fenceRows.map((f) => ({
+    id: f.id,
+    name: f.name,
+    kind: f.kind,
+    shape: f.shape,
+    centerLat: f.centerLat,
+    centerLng: f.centerLng,
+    radiusM: f.radiusM,
+    points: (f.points as [number, number][] | null) ?? null,
+    vehicleIds: f.vehicleIds,
+    appliesWhen: f.appliesWhen,
+    active: f.active,
+  }));
+  const bookingRefs = new Map(
+    (
+      await db.booking.findMany({
+        where: {
+          id: { in: events.flatMap((e) => (e.bookingId ? [e.bookingId] : [])) },
+        },
+        select: { id: true, reference: true },
+      })
+    ).map((b) => [b.id, b.reference]),
+  );
+  const carName = new Map(cars.map((c) => [c.id, c.name]));
+  const canManageFences = can(current.user.role, "gps.geofence.manage");
   const snapshot = await fleetPositions(cars);
   await db.auditEvent.create({
     data: {
@@ -85,6 +124,7 @@ export default async function Tracking({
           linked: !!c.gpsImei,
         }))}
         initialCarId={initialCarId}
+        fences={fences.filter((f) => f.active)}
       />
       <section className="admin-panel">
         <table className="data-table gps-table">
@@ -150,6 +190,78 @@ export default async function Tracking({
           </tbody>
         </table>
       </section>
+      <section className="admin-panel">
+        <h2>Geofence alerts</h2>
+        {events.length ? (
+          <div className="report-table">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>Car</th>
+                  <th>What happened</th>
+                  <th>Booking</th>
+                  <th>Position</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {events.map((e) => {
+                  const breach = isBreach(e.geofence.kind, e.type);
+                  return (
+                    <tr
+                      key={e.id}
+                      className={
+                        breach && !e.acknowledgedAt
+                          ? "geofence-open"
+                          : undefined
+                      }
+                    >
+                      <td>{time(e.at.toISOString())}</td>
+                      <td>{carName.get(e.vehicleId) ?? "Unknown car"}</td>
+                      <td>
+                        {e.type === "EXIT" ? "Left" : "Entered"}{" "}
+                        {e.geofence.name}
+                        {breach ? "" : " (back within the rules)"}
+                      </td>
+                      <td>
+                        {e.bookingId
+                          ? (bookingRefs.get(e.bookingId) ?? "—")
+                          : "—"}
+                      </td>
+                      <td>
+                        <a href={`?car=${e.vehicleId}#live-map`}>Track</a>
+                      </td>
+                      <td>
+                        {e.acknowledgedAt ? (
+                          `Seen ${time(e.acknowledgedAt.toISOString())}`
+                        ) : (
+                          <AcknowledgeAlert id={e.id} />
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="muted">
+            No geofence alerts. Alerts appear here, and are emailed to the
+            operations inbox, when a car leaves an allowed area or enters a
+            no-go area.
+          </p>
+        )}
+      </section>
+      {canManageFences && (
+        <section className="admin-panel">
+          <h2>Geofences</h2>
+          <GeofenceManager
+            fences={fences}
+            cars={cars.map((c) => ({ id: c.id, name: c.name }))}
+          />
+        </section>
+      )}
       {canMap && (
         <section className="admin-panel">
           <h2>Link trackers to cars</h2>

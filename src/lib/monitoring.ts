@@ -36,7 +36,9 @@ export function errorFingerprint(message: string, route: string) {
     .slice(0, 32);
 }
 
-async function alert(
+// Emails the operations inbox; repeats for the same key at most once per
+// repeatAfterMs. Returns whether an email was queued.
+export async function opsAlert(
   db: PrismaClient,
   key: string,
   subject: string,
@@ -105,7 +107,7 @@ export async function recordError(
     });
     if (event.alertedAt && now.getTime() - event.alertedAt.getTime() < HOUR)
       return;
-    const sent = await alert(
+    const sent = await opsAlert(
       db,
       `error:${fingerprint}`,
       `server error on ${route}`,
@@ -284,7 +286,7 @@ export async function checkOperations(db: PrismaClient, now = new Date()) {
   });
   const problems = problemsFrom(await gatherState(db, now), now);
   for (const p of problems)
-    await alert(db, `ops:${p.key}`, p.title, p.detail, now, 6 * HOUR);
+    await opsAlert(db, `ops:${p.key}`, p.title, p.detail, now, 6 * HOUR);
   return problems;
 }
 

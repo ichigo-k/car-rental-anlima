@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type * as Leaflet from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { GpsPosition, RoutePoint } from "@/lib/gps";
+import { drawFence, type FenceShape } from "@/lib/geofence-shapes";
 
 type Car = { id: string; name: string; linked: boolean };
 type Period = "today" | "24h" | "72h";
@@ -55,15 +56,19 @@ function carIcon(L: typeof Leaflet, name: string, p: GpsPosition) {
 export function FleetLiveMap({
   cars,
   initialCarId,
+  fences = [],
 }: {
   cars: Car[];
   initialCarId?: string;
+  fences?: FenceShape[];
 }) {
   const mapEl = useRef<HTMLDivElement>(null);
   const leaflet = useRef<typeof Leaflet | null>(null);
   const map = useRef<Leaflet.Map | null>(null);
   const markers = useRef(new Map<string, Leaflet.Marker>());
   const routeLayer = useRef<Leaflet.LayerGroup | null>(null);
+  const fenceLayer = useRef<Leaflet.LayerGroup | null>(null);
+  const [mapReady, setMapReady] = useState(false);
   const playMarker = useRef<Leaflet.CircleMarker | null>(null);
   const fitted = useRef(false);
   const [positions, setPositions] = useState<GpsPosition[]>([]);
@@ -110,7 +115,9 @@ export function FleetLiveMap({
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       }).addTo(map.current);
+      fenceLayer.current = L.layerGroup().addTo(map.current);
       routeLayer.current = L.layerGroup().addTo(map.current);
+      setMapReady(true);
       void poll();
     });
     return () => {
@@ -120,6 +127,15 @@ export function FleetLiveMap({
       markers.current.clear();
     };
   }, [poll]);
+
+  // Geofences drawn by staff, under the cars and routes.
+  useEffect(() => {
+    const L = leaflet.current;
+    const layer = fenceLayer.current;
+    if (!mapReady || !L || !layer) return;
+    layer.clearLayers();
+    for (const fence of fences) drawFence(L, layer, fence);
+  }, [mapReady, fences]);
 
   // Refresh positions every 15 seconds while the tab is visible.
   useEffect(() => {
@@ -170,7 +186,10 @@ export function FleetLiveMap({
       map.current?.panTo([current.latitude, current.longitude]);
     setRoute((r) => {
       const last = r.at(-1);
-      if (!current.recordedAt || (last && last.recordedAt >= current.recordedAt))
+      if (
+        !current.recordedAt ||
+        (last && last.recordedAt >= current.recordedAt)
+      )
         return r;
       return [
         ...r,
@@ -309,7 +328,9 @@ export function FleetLiveMap({
                       <small>
                         {p
                           ? `${STATE_LABEL[p.freshness]}${
-                              p.speedKmh ? ` · ${Math.round(p.speedKmh)} km/h` : ""
+                              p.speedKmh
+                                ? ` · ${Math.round(p.speedKmh)} km/h`
+                                : ""
                             }`
                           : "No data"}
                       </small>

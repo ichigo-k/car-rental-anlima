@@ -19,6 +19,7 @@ const grants = {
   "enquiry.read": ["ADMIN", "MANAGER", "AGENT"],
   "vehicle.write": ["ADMIN", "MANAGER", "FLEET"],
   "gps.view": ["ADMIN", "MANAGER", "FLEET"],
+  "gps.geofence.manage": ["ADMIN", "MANAGER", "FLEET"],
   "payment.review": ["ADMIN", "MANAGER", "FINANCE"],
   "payment.refund": ["ADMIN", "MANAGER", "FINANCE"],
   "promotion.read": ["ADMIN", "MANAGER", "FINANCE"],
