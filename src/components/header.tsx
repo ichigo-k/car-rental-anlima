@@ -41,7 +41,13 @@ export function Header({
         ))}
       </nav>
       <details className="mobile-nav">
-        <summary>Menu</summary>
+        <summary aria-label="Menu">
+          <span className="hamburger" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </span>
+        </summary>
         <nav aria-label="Mobile navigation">
           {links.map(([href, label]) => (
             <Link href={href} key={label}>

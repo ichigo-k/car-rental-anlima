@@ -66,6 +66,41 @@ p {
   transform: scaleX(1);
 }
 
+/* Mobile menu: a hamburger that turns into a close cross when open. */
+.mobile-nav summary {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  list-style: none;
+  border-radius: 8px;
+}
+.mobile-nav summary::-webkit-details-marker {
+  display: none;
+}
+.hamburger {
+  display: grid;
+  gap: 5px;
+  width: 24px;
+}
+.hamburger span {
+  height: 2.5px;
+  border-radius: 2px;
+  background: currentColor;
+  transition:
+    transform 200ms ease,
+    opacity 200ms ease;
+}
+.mobile-nav[open] .hamburger span:nth-child(1) {
+  transform: translateY(7.5px) rotate(45deg);
+}
+.mobile-nav[open] .hamburger span:nth-child(2) {
+  opacity: 0;
+}
+.mobile-nav[open] .hamburger span:nth-child(3) {
+  transform: translateY(-7.5px) rotate(-45deg);
+}
+
 /* Car cards: a hairline border, a soft lift on hover and a gentle photo zoom. */
 .design-vehicle {
   border: 1px solid #e6ecf2;
