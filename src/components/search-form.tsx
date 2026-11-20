@@ -1,6 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { trackEvent } from "./analytics";
 // iPhone Safari shows an empty date field as blank, so show a hint until a
 // date is chosen.
 function DateField({
@@ -66,6 +67,10 @@ export function SearchForm({
         });
         const category = String(f.get("category"));
         if (category) params.set("category", category);
+        trackEvent("search", {
+          category: category || "any",
+          location: String(f.get("location")),
+        });
         startTransition(() =>
           router.push(`/fleet?${params.toString()}#browse`),
         );

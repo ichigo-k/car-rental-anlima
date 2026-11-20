@@ -11,6 +11,7 @@ import { FavouritesProvider } from "@/components/favourites";
 import { BookingTour } from "@/components/booking-tour";
 import { ChatWidget } from "@/components/chat-widget";
 import { OPEN_GRAPH, siteUrl } from "@/lib/seo";
+import { Analytics } from "@/components/analytics";
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -38,6 +39,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <FavouritesProvider>{children}</FavouritesProvider>
         <BookingTour />
         <ChatWidget enabled={!!process.env.ANTHROPIC_API_KEY} />
+        <Analytics />
       </body>
     </html>
   );

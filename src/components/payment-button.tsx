@@ -1,4 +1,5 @@
 "use client";
+import { trackEvent } from "./analytics";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -129,6 +130,7 @@ export function PaymentButton({
         onClick={async () => {
           setBusy(true);
           setError("");
+          trackEvent("checkout-started", { provider });
           try {
             const response = await fetch("/api/payments/checkout", {
               method: "POST",

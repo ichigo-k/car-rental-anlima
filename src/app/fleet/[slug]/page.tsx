@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Header, Footer } from "@/components/header";
+import { TrackOnView } from "@/components/analytics";
 import { BookingForm } from "@/components/booking-form";
 import { db } from "@/lib/db";
 import { session } from "@/lib/auth";
@@ -46,6 +47,10 @@ export default async function Detail({
   return (
     <>
       <Header active="Cars" />
+      <TrackOnView
+        name="car-viewed"
+        data={{ car: car.slug, category: car.category }}
+      />
       <main className="section reservation-page">
         <Link href="/fleet" className="text-link">
           <ArrowLeft /> Back to the fleet

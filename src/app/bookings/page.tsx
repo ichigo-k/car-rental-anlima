@@ -9,6 +9,7 @@ import { VehicleImage } from "@/components/vehicle-image";
 import { session } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { documentSummary } from "@/lib/documents";
+import { TrackOnView } from "@/components/analytics";
 import { paymentOptions } from "@/lib/payment-config";
 import { paymentNoticeState } from "@/lib/payment-options";
 import { money } from "@/lib/catalogue";
@@ -115,6 +116,12 @@ export default async function Bookings({
             <Link href="/favourites">See favourite cars →</Link>
           </div>
         </div>
+        {paymentState === "verified" && paidBooking && (
+          <TrackOnView
+            name="booking-confirmed"
+            data={{ car: paidBooking.vehicle.slug, days: paidBooking.days }}
+          />
+        )}
         {q.payment &&
           ["verified", "pending", "review", "cancelled"].includes(
             paymentState ?? "",
