@@ -1,7 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Car, CalendarBlank, ShieldCheck, ArrowUpRight } from "./icons";
+import {
+  Car,
+  CalendarBlank,
+  ShieldCheck,
+  ArrowUpRight,
+  IdentificationCard,
+} from "./icons";
 import { SignOut } from "./sign-out";
 export function CustomerShell({
   name,
@@ -11,7 +17,7 @@ export function CustomerShell({
 }: {
   name: string;
   email: string;
-  active: "bookings" | "favourites";
+  active: "bookings" | "favourites" | "documents";
   children: ReactNode;
 }) {
   return (
@@ -42,6 +48,13 @@ export function CustomerShell({
           >
             <Car size={20} />
             Favourite cars
+          </Link>
+          <Link
+            href="/account/documents"
+            aria-current={active === "documents" ? "page" : undefined}
+          >
+            <IdentificationCard size={20} />
+            My documents
           </Link>
           <Link href="/policies">
             <ShieldCheck size={20} />

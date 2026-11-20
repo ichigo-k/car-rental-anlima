@@ -5,11 +5,15 @@ import { PrismaClient, type FeeSettings } from "@prisma/client";
 import { cookiesFrom, enrolMfa, testPhone, totp } from "./staff-mfa";
 import { requireOfflineProviders } from "./offline-providers";
 import { deletePhotoFile } from "../src/lib/photos";
+import { deleteDocumentFile } from "../src/lib/documents";
+import { existsSync } from "node:fs";
+import path from "node:path";
 requireOfflineProviders();
 const db = new PrismaClient();
 const base = "http://localhost:3000";
 const suffix = randomBytes(6).toString("hex");
 let userId: string | undefined;
+let docUserId: string | undefined;
 let vehicleId: string | undefined;
 let otherUserId: string | undefined;
 const phone = testPhone();
@@ -666,6 +670,120 @@ async function main() {
     orderBy: { createdAt: "desc" },
   });
   assert.match(exportAudit?.detail ?? "", /status CANCELLED/);
+  // Customer documents: encrypted, visible to the customer and to staff (with
+  // every staff view logged), replaceable, reviewable and deletable.
+  const docEmail = `smoke-docs-${suffix}@example.com`;
+  const docPassword = randomBytes(24).toString("hex");
+  const docSignup = await fetch(`${base}/api/auth/sign-up/email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Origin: base },
+    body: JSON.stringify({
+      name: "Document Test",
+      email: docEmail,
+      password: docPassword,
+    }),
+  });
+  assert.equal(docSignup.status, 200);
+  docUserId = (await docSignup.json()).user.id;
+  const customerCookie = cookiesFrom(
+    await fetch(`${base}/api/auth/sign-in/email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Origin: base },
+      body: JSON.stringify({ email: docEmail, password: docPassword }),
+    }),
+  );
+  const uploadDocument = (bytes: Uint8Array) => {
+    const form = new FormData();
+    form.append("file", new Blob([Uint8Array.from(bytes)]), "card.pdf");
+    form.append("kind", "ID_FRONT");
+    return fetch(`${base}/api/account/documents`, {
+      method: "POST",
+      headers: { Origin: base, Cookie: customerCookie },
+      body: form,
+    });
+  };
+  const card = new TextEncoder().encode("%PDF-1.7 Ghana Card GHA-000000001-0");
+  const firstUpload = await uploadDocument(card);
+  assert.equal(firstUpload.status, 200, await firstUpload.clone().text());
+  const docId = (await firstUpload.json()).id as string;
+  const firstFile = (
+    await db.customerDocument.findUniqueOrThrow({ where: { id: docId } })
+  ).storageKey;
+  const uploads = process.env.UPLOAD_DIR || path.join("storage", "uploads");
+  assert.ok(existsSync(path.join(uploads, firstFile)));
+  const ownView = await fetch(`${base}/api/account/documents/${docId}`, {
+    headers: { Cookie: customerCookie },
+  });
+  assert.equal(ownView.status, 200);
+  assert.deepEqual(new Uint8Array(await ownView.arrayBuffer()), card);
+  assert.equal(
+    (await fetch(`${base}/api/account/documents/${docId}`)).status,
+    404,
+    "documents are private to their owner",
+  );
+  assert.equal(
+    (
+      await fetch(`${base}/api/account/documents/${docId}`, {
+        headers: { Cookie: headers.Cookie },
+      })
+    ).status,
+    404,
+    "staff cannot use the customer address",
+  );
+  assert.equal(
+    (await uploadDocument(new TextEncoder().encode("<html>not a document")))
+      .status,
+    400,
+  );
+  const replaced = await uploadDocument(card);
+  assert.equal((await replaced.json()).id, docId, "one document per kind");
+  const current = await db.customerDocument.findUniqueOrThrow({
+    where: { id: docId },
+  });
+  assert.notEqual(current.storageKey, firstFile);
+  assert.ok(
+    !existsSync(path.join(uploads, firstFile)),
+    "the replaced file is deleted",
+  );
+  const staffView = await fetch(`${base}/api/admin/documents/${docId}`, {
+    headers: { Cookie: headers.Cookie },
+  });
+  assert.equal(staffView.status, 200);
+  assert.ok(
+    await db.auditEvent.findFirst({
+      where: { action: "DOCUMENT_VIEWED", entityId: docUserId },
+    }),
+    "staff document views are logged",
+  );
+  assert.equal(
+    (
+      await fetch(`${base}/api/admin/documents/${docId}`, {
+        headers: { Cookie: customerCookie },
+      })
+    ).status,
+    403,
+  );
+  const rejected = await fetch(`${base}/api/admin/documents/${docId}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      status: "REJECTED",
+      reason: "The photo is blurred",
+    }),
+  });
+  assert.equal(rejected.status, 200);
+  assert.ok(
+    await db.notification.findFirst({
+      where: { template: "DOCUMENT_REJECTED", recipient: docEmail },
+    }),
+    "the customer is told what to fix",
+  );
+  const deleted = await fetch(`${base}/api/account/documents/${docId}`, {
+    method: "DELETE",
+    headers: { Origin: base, Cookie: customerCookie },
+  });
+  assert.equal(deleted.status, 200);
+  assert.ok(!existsSync(path.join(uploads, current.storageKey)));
   assert.equal(
     (await db.booking.findUniqueOrThrow({ where: { id: created.id } })).status,
     "RETURNED",
@@ -955,7 +1073,7 @@ async function main() {
   );
   assert.equal((await signInWith(newPassword)).status, 200);
   console.log(
-    "PASS: authentication, role injection, concurrent booking conflict, staff booking changes, pricing, itemised quotes with length-of-rental discounts and extras, hold expiry, GPS/report permissions, origin checks, missing payment key, maintenance blocks, customer cancellation and requests, handover and return photos, mileage validation, return, charge approval, admin-set fees and automatic mileage charges, rental closure, customer reviews with approval and featuring, email and phone confirmation before booking, password reset, MFA enforcement and two-step sign-in, staff access management, GPS access audit, audited CSV export, health check and protected backup reports.",
+    "PASS: authentication, role injection, concurrent booking conflict, staff booking changes, pricing, itemised quotes with length-of-rental discounts and extras, hold expiry, GPS/report permissions, origin checks, missing payment key, maintenance blocks, customer cancellation and requests, handover and return photos, mileage validation, return, charge approval, admin-set fees and automatic mileage charges, rental closure, customer reviews with approval and featuring, email and phone confirmation before booking, password reset, MFA enforcement and two-step sign-in, staff access management, GPS access audit, audited CSV export, encrypted customer documents with review, health check and protected backup reports.",
   );
 }
 main()
@@ -1001,6 +1119,17 @@ main()
       await db.booking.deleteMany({ where: { vehicleId } });
       await db.vehicleBlock.deleteMany({ where: { vehicleId } });
       await db.vehicle.delete({ where: { id: vehicleId } });
+    }
+    if (docUserId) {
+      for (const doc of await db.customerDocument.findMany({
+        where: { userId: docUserId },
+      }))
+        await deleteDocumentFile(doc.storageKey);
+      await db.notification.deleteMany({
+        where: { recipient: { contains: `smoke-docs-${suffix}` } },
+      });
+      await db.auditEvent.deleteMany({ where: { entityId: docUserId } });
+      await db.user.delete({ where: { id: docUserId } }).catch(() => {});
     }
     if (feesSnapshot === null)
       await db.feeSettings.deleteMany({ where: { id: "default" } });

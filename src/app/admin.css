@@ -1408,3 +1408,78 @@
     grid-template-columns: 1fr;
   }
 }
+/* Customer documents (staff). */
+.customer-list {
+  display: grid;
+  gap: 10px;
+}
+.customer-card summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+}
+.customer-card summary > span:first-child {
+  display: grid;
+  gap: 3px;
+}
+.customer-card summary small {
+  color: #647181;
+  font-size: 12px;
+}
+.doc-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.doc-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 10px;
+  background: #edf1f5;
+  color: #647181;
+}
+.doc-badge.doc-approved {
+  background: #dff3e4;
+  color: #12612f;
+}
+.doc-badge.doc-pending {
+  background: #f7edce;
+  color: #7a5a00;
+}
+.doc-badge.doc-rejected {
+  background: #fde8e7;
+  color: #9a1c13;
+}
+.customer-docs {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0;
+  display: grid;
+  gap: 10px;
+  font-size: 13px;
+}
+.customer-docs li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.document-review {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.doc-line {
+  font-size: 12px;
+  color: #647181;
+  text-decoration: underline;
+}
+.doc-badge.doc-incomplete {
+  background: #f7edce;
+  color: #7a5a00;
+}

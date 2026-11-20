@@ -3,12 +3,14 @@ import { deliverQueued, queueReminders } from "@/lib/notify";
 import { db } from "@/lib/db";
 import { removeAbandonedPhotos } from "@/lib/photos";
 import { refreshPendingRefunds } from "@/lib/refunds";
+import { removeOldRejectedDocuments } from "@/lib/documents";
 import { checkOperations, cronAuthorised } from "@/lib/monitoring";
 // Run every 10–15 minutes from a scheduler (for example Vercel Cron) with
 // "Authorization: Bearer <CRON_SECRET>". Queues pickup and return reminders,
 // then sends or retries everything that is due. Also removes inspection photos
 // that were uploaded but never saved with an inspection, and asks the payment
-// providers for the status of refunds still in progress. Finally records that
+// providers for the status of refunds still in progress, and deletes customer
+// documents rejected more than 30 days ago. Finally records that
 // it ran and emails the operations inbox about anything that needs attention.
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -19,6 +21,7 @@ export async function GET(req: Request) {
   const delivery = await deliverQueued(100);
   const abandonedPhotos = await removeAbandonedPhotos(db);
   const refundsChecked = await refreshPendingRefunds();
+  const rejectedDocumentsRemoved = await removeOldRejectedDocuments(db);
   const problems = await checkOperations(db);
   return NextResponse.json(
     {
@@ -26,6 +29,7 @@ export async function GET(req: Request) {
       ...delivery,
       abandonedPhotos,
       refundsChecked,
+      rejectedDocumentsRemoved,
       problems: problems.map((p) => p.key),
     },
     { headers: { "Cache-Control": "no-store" } },

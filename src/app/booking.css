@@ -899,3 +899,51 @@
     display: none;
   }
 }
+/* Customer documents. */
+.document-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+.document-card {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid #e0e6eb;
+  border-radius: 14px;
+  background: #fff;
+}
+.document-card > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+.document-card span {
+  font-size: 13px;
+  color: #647181;
+}
+.document-approved span {
+  color: #12612f;
+  font-weight: 600;
+}
+.document-rejected span {
+  color: #9a1c13;
+  font-weight: 600;
+}
+.document-card small {
+  color: #9a1c13;
+}
+.document-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+}
+.document-actions label.button {
+  cursor: pointer;
+}
+.document-privacy {
+  margin-top: 18px;
+  font-size: 13px;
+}

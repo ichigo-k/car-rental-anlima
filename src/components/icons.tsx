@@ -18,4 +18,5 @@ export {
   Globe,
   Clock,
   NavigationArrow,
+  IdentificationCard,
 } from "@phosphor-icons/react";

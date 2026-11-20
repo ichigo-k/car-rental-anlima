@@ -5,7 +5,7 @@ Guide FR-023 and AC-10. Scripts: `deploy/backup.sh` and `deploy/restore-test.sh`
 ## What is backed up
 
 - **The database:** every night, a full `pg_dump` over Neon's direct connection.
-- **Photos:** the handover and return photo folder (`UPLOAD_DIR`, default `/var/www/anlima/storage/uploads`).
+- **Photos and customer documents:** the upload folder (`UPLOAD_DIR`, default `/var/www/anlima/storage/uploads`). Customer documents in it are encrypted. To restore them you also need the same `IDENTITY_ENCRYPTION_SECRET` (or `BETTER_AUTH_SECRET`), so keep a copy of the server's `.env` somewhere safe, separate from the backups.
 
 Both go to `/var/backups/anlima` (readable by root only) and are kept for 14 days (`BACKUP_KEEP_DAYS`).
 

@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { shrinkImage } from "@/lib/shrink-image";
 
 type Photo = {
   key: string;
@@ -9,34 +10,6 @@ type Photo = {
   status: "uploading" | "done" | "failed";
   error?: string;
 };
-const MAX_SIDE = 1600;
-// Resize on the phone before upload: smaller files on mobile data, and
-// re-encoding drops hidden metadata such as the phone's location.
-async function shrink(file: File): Promise<Blob> {
-  try {
-    const bitmap = await createImageBitmap(file, {
-      imageOrientation: "from-image",
-    });
-    const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    canvas
-      .getContext("2d")!
-      .drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    bitmap.close();
-    return await new Promise((resolve, reject) =>
-      canvas.toBlob(
-        (b) => (b ? resolve(b) : reject(new Error("resize failed"))),
-        "image/jpeg",
-        0.82,
-      ),
-    );
-  } catch {
-    return file;
-  }
-}
-
 export function RentalAction({ id, kind }: { id: string; kind: string }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
@@ -56,7 +29,7 @@ export function RentalAction({ id, kind }: { id: string; kind: string }) {
         { key, preview: URL.createObjectURL(file), status: "uploading" },
       ]);
       const body = new FormData();
-      body.append("file", await shrink(file), "photo.jpg");
+      body.append("file", await shrinkImage(file), "photo.jpg");
       body.append("kind", kind);
       body.append("takenAt", new Date(file.lastModified).toISOString());
       try {

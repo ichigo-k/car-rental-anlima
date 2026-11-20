@@ -8,6 +8,7 @@ import { REVIEWABLE_STATUSES, shortName } from "@/lib/reviews";
 import { VehicleImage } from "@/components/vehicle-image";
 import { session } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { documentSummary } from "@/lib/documents";
 import { paymentOptions } from "@/lib/payment-config";
 import { paymentNoticeState } from "@/lib/payment-options";
 import { money } from "@/lib/catalogue";
@@ -57,9 +58,20 @@ export default async function Bookings({
         ? !isHistory(b)
         : true,
   );
-  const favouriteCount = await db.favourite.count({
-    where: { userId: current.user.id },
-  });
+  const [favouriteCount, documents] = await Promise.all([
+    db.favourite.count({ where: { userId: current.user.id } }),
+    db.customerDocument.findMany({
+      where: { userId: current.user.id },
+      select: { kind: true, status: true },
+    }),
+  ]);
+  // Remind customers with a trip ahead to upload or replace documents.
+  const docs = documentSummary(documents);
+  const docsNeeded =
+    bookings.some((b) => ["CONFIRMED", "PAYMENT_REVIEW"].includes(b.status)) &&
+    [docs.licence, docs.id].some((s) =>
+      ["MISSING", "INCOMPLETE", "REJECTED"].includes(s),
+    );
   return (
     <CustomerShell
       name={current.user.name}
@@ -72,6 +84,13 @@ export default async function Bookings({
           <h1>Hello, {current.user.name.split(" ")[0]}.</h1>
           <p>Your reservations, all in one place.</p>
         </div>
+        {docsNeeded && (
+          <p className="notice">
+            Upload both sides of your driving licence and Ghana Card before
+            pickup so our team can check them in advance.{" "}
+            <Link href="/account/documents">Go to My documents</Link>
+          </p>
+        )}
         <div className="account-summary-grid">
           <div className="account-summary navy-tile">
             <span>Awaiting payment</span>

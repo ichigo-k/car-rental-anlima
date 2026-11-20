@@ -8,6 +8,14 @@ import { money } from "@/lib/catalogue";
 import { bookingStatus, statusLabel } from "@/lib/booking-status";
 import { getFees, cancellationTerms } from "@/lib/fees";
 import { can } from "@/lib/permissions";
+import { documentSummary } from "@/lib/documents";
+const DOC_LABEL = {
+  APPROVED: "approved",
+  PENDING: "to review",
+  REJECTED: "not accepted",
+  INCOMPLETE: "one side missing",
+  MISSING: "not uploaded",
+};
 export const dynamic = "force-dynamic";
 // When a photo was uploaded, and when the device says it was taken if that is
 // more than ten minutes earlier: an old gallery photo stands out.
@@ -94,7 +102,13 @@ export default async function Reservations({
       db.booking.findMany({
         where,
         include: {
-          user: { select: { name: true, email: true } },
+          user: {
+            select: {
+              name: true,
+              email: true,
+              documents: { select: { kind: true, status: true } },
+            },
+          },
           vehicle: true,
           inspections: {
             orderBy: { createdAt: "asc" },
@@ -203,6 +217,18 @@ export default async function Reservations({
                   {b.ghanaCardLast4 && (
                     <small>Ghana Card ending {b.ghanaCardLast4}</small>
                   )}
+                  {(() => {
+                    const docs = documentSummary(b.user.documents);
+                    return (
+                      <Link
+                        className="doc-line"
+                        href={`/admin/customers?q=${encodeURIComponent(b.user.email)}`}
+                      >
+                        Licence: {DOC_LABEL[docs.licence]} · Ghana Card:{" "}
+                        {DOC_LABEL[docs.id]}
+                      </Link>
+                    );
+                  })()}
                 </div>
                 <div>
                   <h3>Pickup</h3>
