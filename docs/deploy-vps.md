@@ -8,7 +8,7 @@ The live site runs on the Hostinger VPS (Ubuntu 24.04, 168.231.116.95) beside ot
 - Certbot provides HTTPS and renews it automatically.
 - Cron calls `deploy/cron-notifications.sh` every 10 minutes for reminders and message retries.
 
-The code lives in `/var/www/anlima`, checked out on the `deploy` branch. Its `.env` is created on the server and never committed; `BETTER_AUTH_URL` must be `https://anlimacarrental.com`.
+The code lives in `/var/www/anlima`, checked out on the `deploy` branch. Handover and return photos are stored in `/var/www/anlima/storage/uploads` (set `UPLOAD_DIR` to move them); git and deploys leave that folder alone, but it must be included in server backups. The app's `.env` is created on the server and never committed; `BETTER_AUTH_URL` must be `https://anlimacarrental.com`.
 
 ## Updating
 

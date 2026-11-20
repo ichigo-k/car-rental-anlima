@@ -9,6 +9,19 @@ import { bookingStatus, statusLabel } from "@/lib/booking-status";
 import { getFees, cancellationTerms } from "@/lib/fees";
 import { can } from "@/lib/permissions";
 export const dynamic = "force-dynamic";
+// When a photo was uploaded, and when the device says it was taken if that is
+// more than ten minutes earlier: an old gallery photo stands out.
+function photoTime(uploaded: Date, taken: Date | null) {
+  const at = (d: Date) =>
+    d.toLocaleString("en-GB", {
+      timeZone: "Africa/Accra",
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+  return taken && uploaded.getTime() - taken.getTime() > 10 * 60000
+    ? `Taken ${at(taken)} · uploaded ${at(uploaded)}`
+    : at(uploaded);
+}
 export default async function Reservations({
   searchParams,
 }: {
@@ -83,7 +96,10 @@ export default async function Reservations({
         include: {
           user: { select: { name: true, email: true } },
           vehicle: true,
-          inspections: true,
+          inspections: {
+            orderBy: { createdAt: "asc" },
+            include: { photos: { orderBy: { createdAt: "asc" } } },
+          },
           charges: { orderBy: { createdAt: "asc" } },
           changes: { orderBy: { createdAt: "asc" } },
         },
@@ -323,10 +339,43 @@ export default async function Reservations({
                 <summary>Inspection history ({b.inspections.length})</summary>
                 {b.inspections.length ? (
                   b.inspections.map((i) => (
-                    <p key={i.id}>
-                      {i.kind} · {i.mileage.toLocaleString()} km · {i.fuel} ·{" "}
-                      {i.condition}
-                    </p>
+                    <div key={i.id} className="inspection-record">
+                      <p>
+                        <strong>
+                          {i.kind === "CHECKOUT" ? "Handover" : "Return"}
+                        </strong>{" "}
+                        ·{" "}
+                        {i.createdAt.toLocaleString("en-GB", {
+                          timeZone: "Africa/Accra",
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}{" "}
+                        · {i.mileage.toLocaleString()} km · {i.fuel} ·{" "}
+                        {i.condition}
+                      </p>
+                      {i.photos.length > 0 && (
+                        <ul className="inspection-photo-grid">
+                          {i.photos.map((photo) => (
+                            <li key={photo.id}>
+                              <a
+                                href={`/api/admin/photos/${photo.id}`}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                <img
+                                  src={`/api/admin/photos/${photo.id}`}
+                                  alt={`${i.kind === "CHECKOUT" ? "Handover" : "Return"} photo`}
+                                  loading="lazy"
+                                />
+                              </a>
+                              <small>
+                                {photoTime(photo.createdAt, photo.takenAt)}
+                              </small>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                   ))
                 ) : (
                   <p>No handover or return inspection recorded.</p>

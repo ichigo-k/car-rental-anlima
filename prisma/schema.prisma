@@ -192,6 +192,7 @@ model Booking {
   review             Review?
   items              BookingItem[]
   changes            BookingChange[]
+  photos             InspectionPhoto[]
 
   @@index([vehicleId, pickup, returnAt])
   @@index([promotionId])
@@ -375,6 +376,30 @@ model Inspection {
   acknowledgement String
   recordedBy      String
   createdAt       DateTime @default(now())
+  photos          InspectionPhoto[]
+}
+
+// A handover or return photo (Guide §7). Files live on the server's disk
+// (UPLOAD_DIR), never in a public folder. A photo is uploaded first and joins
+// its inspection when the inspection is saved; unattached ones are removed
+// after a day.
+model InspectionPhoto {
+  id           String      @id @default(cuid())
+  bookingId    String
+  booking      Booking     @relation(fields: [bookingId], references: [id])
+  inspectionId String?
+  inspection   Inspection? @relation(fields: [inspectionId], references: [id])
+  kind         String
+  storageKey   String      @unique
+  contentType  String
+  size         Int
+  sha256       String
+  takenAt      DateTime?
+  uploadedBy   String
+  createdAt    DateTime    @default(now())
+
+  @@index([bookingId])
+  @@index([inspectionId])
 }
 
 model AuditEvent {

@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { PrismaClient, type FeeSettings } from "@prisma/client";
 import { cookiesFrom, enrolMfa, testPhone, totp } from "./staff-mfa";
 import { requireOfflineProviders } from "./offline-providers";
+import { deletePhotoFile } from "../src/lib/photos";
 requireOfflineProviders();
 const db = new PrismaClient();
 const base = "http://localhost:3000";
@@ -486,30 +487,91 @@ async function main() {
       dailyRate: requested.dailyRate,
     },
   });
-  const handover = await fetch(`${base}/api/admin/rentals/${created.id}`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      kind: "CHECKOUT",
-      mileage: 1000,
-      fuel: "Full",
-      condition: "Synthetic inspection",
-      acknowledgement: "Test acknowledgement",
-    }),
+  // Handover and return need photos (Guide §7). A minimal JPEG header is
+  // enough for the server's file-type check.
+  const testJpeg = new Uint8Array([
+    0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01,
+    0xff, 0xd9,
+  ]);
+  const uploadPhoto = (kind: string, bytes: Uint8Array = testJpeg) => {
+    const form = new FormData();
+    form.append("file", new Blob([Uint8Array.from(bytes)]), "car.jpg");
+    form.append("kind", kind);
+    form.append("takenAt", new Date().toISOString());
+    return fetch(`${base}/api/admin/rentals/${created.id}/photos`, {
+      method: "POST",
+      headers: { Origin: base, Cookie: headers.Cookie },
+      body: form,
+    });
+  };
+  const inspect = (kind: string, mileage: number, photoIds: string[]) =>
+    fetch(`${base}/api/admin/rentals/${created.id}`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        kind,
+        mileage,
+        fuel: "Full",
+        condition: "Synthetic inspection",
+        acknowledgement: "Test acknowledgement",
+        photoIds,
+      }),
+    });
+  assert.equal(
+    (await inspect("CHECKOUT", 1000, [])).status,
+    400,
+    "a handover needs at least one photo",
+  );
+  assert.equal(
+    (await uploadPhoto("CHECKOUT", new TextEncoder().encode("not an image")))
+      .status,
+    400,
+    "only real images are accepted",
+  );
+  const handoverPhoto = await uploadPhoto("CHECKOUT");
+  assert.equal(handoverPhoto.status, 200, await handoverPhoto.clone().text());
+  const handoverPhotoId = (await handoverPhoto.json()).id as string;
+  const shown = await fetch(`${base}/api/admin/photos/${handoverPhotoId}`, {
+    headers: { Cookie: headers.Cookie },
   });
-  assert.equal(handover.status, 200);
-  const badReturn = await fetch(`${base}/api/admin/rentals/${created.id}`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      kind: "RETURN",
-      mileage: 900,
-      fuel: "Full",
-      condition: "Synthetic inspection",
-      acknowledgement: "Test acknowledgement",
-    }),
+  assert.equal(shown.status, 200);
+  assert.deepEqual(new Uint8Array(await shown.arrayBuffer()), testJpeg);
+  assert.equal(
+    (await fetch(`${base}/api/admin/photos/${handoverPhotoId}`)).status,
+    403,
+    "photos are for staff only",
+  );
+  const handover = await inspect("CHECKOUT", 1000, [handoverPhotoId]);
+  assert.equal(handover.status, 200, await handover.clone().text());
+  const handoverRecord = await db.inspection.findFirstOrThrow({
+    where: { bookingId: created.id, kind: "CHECKOUT" },
+    include: { photos: true },
   });
+  assert.deepEqual(
+    handoverRecord.photos.map((p) => p.id),
+    [handoverPhotoId],
+    "the photo is kept with its inspection",
+  );
+  assert.equal(
+    (
+      await fetch(`${base}/api/admin/photos/${handoverPhotoId}`, {
+        method: "DELETE",
+        headers: { Origin: base, Cookie: headers.Cookie },
+      })
+    ).status,
+    409,
+    "photos of a saved inspection cannot be removed",
+  );
+  const returnPhoto = await uploadPhoto("RETURN");
+  assert.equal(returnPhoto.status, 200);
+  const returnPhotoId = (await returnPhoto.json()).id as string;
+  const badReturn = await inspect("RETURN", 900, [returnPhotoId]);
   assert.equal(badReturn.status, 400);
+  assert.equal(
+    (await inspect("RETURN", 1200, [handoverPhotoId])).status,
+    400,
+    "a handover photo cannot be reused for the return",
+  );
   feesSnapshot = await db.feeSettings.findUnique({
     where: { id: "default" },
   });
@@ -540,18 +602,8 @@ async function main() {
   await db.user.update({ where: { id: userId }, data: { role: "ADMIN" } });
   assert.equal((await saveFees()).status, 200);
   await db.user.update({ where: { id: userId }, data: { role: "MANAGER" } });
-  const returned = await fetch(`${base}/api/admin/rentals/${created.id}`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      kind: "RETURN",
-      mileage: 1200,
-      fuel: "Full",
-      condition: "Synthetic inspection",
-      acknowledgement: "Test acknowledgement",
-    }),
-  });
-  assert.equal(returned.status, 200);
+  const returned = await inspect("RETURN", 1200, [returnPhotoId]);
+  assert.equal(returned.status, 200, await returned.clone().text());
   const staffReport = await fetch(`${base}/api/admin/reports`, {
     headers: { Cookie: cookie },
   });
@@ -846,7 +898,7 @@ async function main() {
   );
   assert.equal((await signInWith(newPassword)).status, 200);
   console.log(
-    "PASS: authentication, role injection, concurrent booking conflict, staff booking changes, pricing, itemised quotes with length-of-rental discounts and extras, hold expiry, GPS/report permissions, origin checks, missing payment key, maintenance blocks, customer cancellation and requests, handover, mileage validation, return, charge approval, admin-set fees and automatic mileage charges, rental closure, customer reviews with approval and featuring, email and phone confirmation before booking, password reset, MFA enforcement and two-step sign-in, staff access management, GPS access audit and audited CSV export.",
+    "PASS: authentication, role injection, concurrent booking conflict, staff booking changes, pricing, itemised quotes with length-of-rental discounts and extras, hold expiry, GPS/report permissions, origin checks, missing payment key, maintenance blocks, customer cancellation and requests, handover and return photos, mileage validation, return, charge approval, admin-set fees and automatic mileage charges, rental closure, customer reviews with approval and featuring, email and phone confirmation before booking, password reset, MFA enforcement and two-step sign-in, staff access management, GPS access audit and audited CSV export.",
   );
 }
 main()
@@ -871,6 +923,13 @@ main()
       });
       await db.bookingCharge.deleteMany({
         where: { bookingId: { in: records.map((b) => b.id) } },
+      });
+      const photos = await db.inspectionPhoto.findMany({
+        where: { bookingId: { in: records.map((b) => b.id) } },
+      });
+      for (const photo of photos) await deletePhotoFile(photo.storageKey);
+      await db.inspectionPhoto.deleteMany({
+        where: { id: { in: photos.map((p) => p.id) } },
       });
       await db.inspection.deleteMany({
         where: { bookingId: { in: records.map((b) => b.id) } },

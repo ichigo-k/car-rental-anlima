@@ -1183,3 +1183,79 @@
 .admin-shell .change-preview .check input {
   width: auto;
 }
+/* Handover and return photos. */
+.inspection-photos {
+  border: 1px solid #e2e9ee;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.inspection-photos legend {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 4px;
+}
+.inspection-photos p {
+  margin: 0;
+  font-size: 12px;
+}
+.inspection-photos ul,
+.inspection-photo-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+.inspection-photos li,
+.inspection-photo-grid li {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+  color: #647181;
+}
+.inspection-photos img,
+.inspection-photo-grid img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #f3f6f7;
+  display: block;
+}
+.inspection-photos li.photo-uploading img {
+  opacity: 0.5;
+}
+.inspection-photos li.photo-failed span {
+  color: #9a1c13;
+}
+.inspection-photos li button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 0;
+  background: #012d5ae6;
+  color: #fff;
+  font-size: 15px;
+  line-height: 24px;
+  cursor: pointer;
+}
+.admin-shell .inspection-photos input[type="file"] {
+  border: 0;
+  padding: 0;
+  background: none;
+}
+.inspection-record {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}

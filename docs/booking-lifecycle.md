@@ -21,6 +21,16 @@ Statuses follow the Developer Guide §5 and §7. Rules live in `src/lib/booking-
 - Finance, managers and admins approve or waive charges and close rentals.
 - Customers cancel unpaid holds themselves. For a confirmed booking they send a cancellation request, which appears on the admin dashboard; staff apply the cancellation policy and cancel.
 
+## Handover and return photos
+
+Every handover and return needs at least one photo, up to 20 (Guide §7). Staff add them in the inspection form; on a phone the picker offers the camera. Each photo is resized on the device to at most 1600 pixels before upload, which keeps uploads small on mobile data and strips hidden metadata such as the phone's location.
+
+- **Upload:** photos upload as they are added and join the inspection when it is saved. The server checks each file really is a JPEG, PNG or WebP image of 5 MB or less, from its content rather than its name. Photos of a saved inspection cannot be removed.
+- **Viewing:** photos appear in the booking's inspection history. Only staff who can see bookings can open them; they are never in a public folder.
+- **Timestamps:** each photo shows when it was uploaded. If the phone says it was taken more than ten minutes earlier, both times are shown, so an old gallery photo stands out.
+- **Storage:** files are kept on the server's disk in `UPLOAD_DIR` (default `storage/uploads` in the app folder, which deploys keep), not in the database. Include this folder in backups.
+- **Clean-up:** photos uploaded for an inspection that was never saved are deleted after a day by the scheduled job (`/api/cron/notifications`).
+
 ## Changing a booking
 
 Staff can move a confirmed booking to other dates or another car, and change the return time of a car already on the road (Guide AC-05). The rules are in `src/lib/booking-change.ts`.
