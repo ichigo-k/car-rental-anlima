@@ -73,6 +73,8 @@ The integration tests use temporary records in your configured database and remo
 | `npm run test:contact` | Enquiries and access controls | Yes, with `npm run dev:test` |
 | `npm run test:payments` | Checkout, webhooks, payment verification and refunds | No |
 | `npm run test:monitoring` | Error grouping, alerts and health checks | No |
+| `npm run test:notifications` | Message queue, retries and provider formats | No; stop the app first, because a running app also works through the shared message queue |
+| `npm run test:gps`, `npm run test:assistant` | Tracksolid client, chat assistant | No |
 
 The payment tests mock provider responses. They do not charge a card or Mobile Money wallet. Testing actual hosted checkout needs provider test keys and a public webhook URL.
 
