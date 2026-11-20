@@ -1356,3 +1356,55 @@
   text-align: right;
   white-space: nowrap;
 }
+/* System health. */
+.status.health-ok {
+  background: #dff3e4;
+  color: #12612f;
+}
+.status.health-degraded {
+  background: #f7edce;
+  color: #7a5a00;
+}
+.status.health-down {
+  background: #fde8e7;
+  color: #9a1c13;
+}
+.report-summary .check-warn strong {
+  color: #7a5a00;
+}
+.report-summary .check-fail strong {
+  color: #9a1c13;
+}
+.problem-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+.problem-list li {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fbf5e2;
+  font-size: 13px;
+}
+.system-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 18px;
+  margin: 0;
+  font-size: 13px;
+}
+.system-facts dt {
+  color: #647181;
+}
+.system-facts dd {
+  margin: 0;
+}
+@media (max-width: 760px) {
+  .system-facts {
+    grid-template-columns: 1fr;
+  }
+}

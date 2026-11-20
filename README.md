@@ -71,12 +71,13 @@ The integration tests use temporary records in your configured database and remo
 | `npm run test:integration` | Accounts, reservations, booking changes and staff operations | Yes, with `npm run dev:test` |
 | `npm run test:promotions` | Offers, coupon limits and saved prices | Yes, with `npm run dev:test` |
 | `npm run test:contact` | Enquiries and access controls | Yes, with `npm run dev:test` |
-| `npm run test:payments` | Checkout, webhooks and payment verification | No |
+| `npm run test:payments` | Checkout, webhooks, payment verification and refunds | No |
+| `npm run test:monitoring` | Error grouping, alerts and health checks | No |
 
 The payment tests mock provider responses. They do not charge a card or Mobile Money wallet. Testing actual hosted checkout needs provider test keys and a public webhook URL.
 
 ## Current limits
 
-The Contact page still shows placeholders for ANLIMA's phone, email and address. The rental terms and privacy notice need ANLIMA's approval. Not built yet: uptime and error monitoring, and geofences.
+The Contact page still shows placeholders for ANLIMA's phone, email and address. The rental terms and privacy notice need ANLIMA's approval. Not built yet: customer document uploads and geofences. Monitoring and backups need a few one-off steps on the server (`docs/monitoring.md`, `docs/backups.md`).
 
 Keep `.env` out of Git. Set a stable `IDENTITY_ENCRYPTION_SECRET` before storing real Ghana Card records; changing encryption secrets later requires migrating those records. Use an HTTPS `BETTER_AUTH_URL` when deploying.

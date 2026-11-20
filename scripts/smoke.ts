@@ -327,6 +327,21 @@ async function main() {
     headers: { Cookie: cookie },
   });
   assert.equal(report.status, 403);
+  // Uptime monitors read the health check; backup reports need the secret.
+  const health = await fetch(`${base}/api/health`);
+  assert.equal(health.status, 200);
+  assert.ok(["ok", "degraded"].includes((await health.json()).status));
+  assert.equal(
+    (
+      await fetch(`${base}/api/cron/report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "backup", ok: true, detail: "forged" }),
+      })
+    ).status,
+    401,
+    "backup reports need the cron secret",
+  );
   const origin = await fetch(`${base}/api/bookings`, {
     method: "POST",
     headers: { ...headers, Origin: "https://untrusted.example" },
@@ -940,7 +955,7 @@ async function main() {
   );
   assert.equal((await signInWith(newPassword)).status, 200);
   console.log(
-    "PASS: authentication, role injection, concurrent booking conflict, staff booking changes, pricing, itemised quotes with length-of-rental discounts and extras, hold expiry, GPS/report permissions, origin checks, missing payment key, maintenance blocks, customer cancellation and requests, handover and return photos, mileage validation, return, charge approval, admin-set fees and automatic mileage charges, rental closure, customer reviews with approval and featuring, email and phone confirmation before booking, password reset, MFA enforcement and two-step sign-in, staff access management, GPS access audit and audited CSV export.",
+    "PASS: authentication, role injection, concurrent booking conflict, staff booking changes, pricing, itemised quotes with length-of-rental discounts and extras, hold expiry, GPS/report permissions, origin checks, missing payment key, maintenance blocks, customer cancellation and requests, handover and return photos, mileage validation, return, charge approval, admin-set fees and automatic mileage charges, rental closure, customer reviews with approval and featuring, email and phone confirmation before booking, password reset, MFA enforcement and two-step sign-in, staff access management, GPS access audit, audited CSV export, health check and protected backup reports.",
   );
 }
 main()

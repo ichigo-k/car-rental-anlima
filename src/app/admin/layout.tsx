@@ -90,6 +90,11 @@ export default async function AdminLayout({
       label: "Activity history",
       icon: 6,
     },
+    can(role, "audit.read") && {
+      href: "/admin/system",
+      label: "System health",
+      icon: 8,
+    },
     { href: "/", label: "Customer website", icon: 7 },
   ].filter((link) => !!link);
   return (

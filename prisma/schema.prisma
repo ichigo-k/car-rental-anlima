@@ -439,3 +439,22 @@ model AuditEvent {
   detail    String
   createdAt DateTime @default(now())
 }
+
+// Server errors, grouped so a repeated error counts up instead of flooding
+// the operations inbox (Guide FR-023). No request headers or query strings
+// are stored.
+model ErrorEvent {
+  id          String    @id @default(cuid())
+  fingerprint String    @unique
+  message     String
+  digest      String?
+  path        String
+  method      String
+  routeType   String?
+  count       Int       @default(1)
+  firstSeen   DateTime  @default(now())
+  lastSeen    DateTime  @default(now())
+  alertedAt   DateTime?
+
+  @@index([lastSeen])
+}
