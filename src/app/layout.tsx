@@ -7,6 +7,7 @@ import "./figma.css";
 import "./admin.css";
 import "./anlima.css";
 import "./marketing-pages.css";
+import "./polish.css";
 import { FavouritesProvider } from "@/components/favourites";
 import { BookingTour } from "@/components/booking-tour";
 import { ChatWidget } from "@/components/chat-widget";
