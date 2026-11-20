@@ -26,3 +26,14 @@ Guide §10: privacy-conscious traffic and booking-funnel analytics. The site use
 In Umami, the four events form the booking funnel (Events and Funnels reports).
 
 To self-host Umami later (for example on the VPS with Docker), also set `NEXT_PUBLIC_UMAMI_SCRIPT_URL` to your Umami's `script.js` address. Without a Website ID, nothing loads.
+
+## Website analytics page
+
+Administrators, managers and finance officers see the figures in the dashboard at **Website analytics** (`/admin/analytics`), for the last 7, 30 or 90 days:
+
+- **Totals:** visitors, page views, the share who left after one page and the average visit, each with the change on the previous period. Searches, bookings made and payments verified sit beside them; the last two come from ANLIMA's own records.
+- **Visits per day,** with a table view.
+- **Booking funnel:** visitors, then car views, started payments and confirmed bookings, with the share that went on at each step.
+- **Rankings:** top pages, where visitors came from, countries and devices.
+
+To switch it on, create an API key in Umami (**Settings → API keys**) and add it to the server's `.env` as `UMAMI_API_KEY=...`, then run the update. The key stays on the server. Figures are cached for five minutes, which keeps well within Umami's limit of 50 requests per 15 seconds. If Umami cannot be reached, the page says so and still shows ANLIMA's own figures.

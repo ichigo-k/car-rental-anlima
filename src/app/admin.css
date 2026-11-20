@@ -1576,3 +1576,128 @@ tr.geofence-open td {
     height: 360px;
   }
 }
+/* Website analytics. Chart marks use the validated chart blue; text uses
+   text colours. */
+.report-summary .admin-panel small {
+  color: #647181;
+  font-size: 11px;
+}
+.analytics-chart {
+  margin: 0;
+}
+.daily-plot {
+  position: relative;
+  height: 200px;
+  margin: 8px 0 0 34px;
+}
+.daily-grid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid #e8edf1;
+}
+.daily-grid span {
+  position: absolute;
+  right: calc(100% + 6px);
+  top: -7px;
+  font-size: 11px;
+  color: #647181;
+}
+.daily-bars {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+}
+.daily-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 0;
+}
+.daily-col span {
+  display: block;
+  width: 100%;
+  max-width: 24px;
+  border-radius: 4px 4px 0 0;
+}
+.daily-col:hover span {
+  opacity: 0.8;
+}
+.daily-axis {
+  display: flex;
+  justify-content: space-between;
+  margin: 6px 0 0 34px;
+  font-size: 11px;
+  color: #647181;
+}
+.analytics-chart details {
+  margin-top: 10px;
+  font-size: 13px;
+}
+.analytics-funnel {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.analytics-funnel li {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr) 150px;
+  gap: 12px;
+  align-items: center;
+  font-size: 13px;
+}
+.funnel-track,
+.ranked-track {
+  display: block;
+  height: 12px;
+  background: #f1f4f7;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.funnel-bar,
+.ranked-track span {
+  display: block;
+  height: 100%;
+  border-radius: 0 4px 4px 0;
+}
+.funnel-value {
+  display: grid;
+  color: #012d5a;
+  font-weight: 600;
+}
+.funnel-value small {
+  color: #647181;
+  font-weight: 400;
+  font-size: 11px;
+}
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+.analytics-ranked td:first-child {
+  display: grid;
+  gap: 5px;
+}
+.analytics-ranked .ranked-track {
+  height: 6px;
+}
+.analytics-ranked td.num {
+  text-align: right;
+  white-space: nowrap;
+  vertical-align: top;
+}
+@media (max-width: 760px) {
+  .analytics-funnel li {
+    grid-template-columns: 1fr auto;
+  }
+  .analytics-funnel .funnel-track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}

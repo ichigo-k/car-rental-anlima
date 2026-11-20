@@ -60,6 +60,11 @@ export default async function AdminLayout({
       label: "Reports",
       icon: 6,
     },
+    can(role, "report.export") && {
+      href: "/admin/analytics",
+      label: "Website analytics",
+      icon: 9,
+    },
     can(role, "customer.read") && {
       href: "/admin/customers",
       label: "Customers",
