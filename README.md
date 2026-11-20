@@ -74,6 +74,7 @@ The integration tests use temporary records in your configured database and remo
 | `npm run test:payments` | Checkout, webhooks, payment verification and refunds | No |
 | `npm run test:monitoring` | Error grouping, alerts and health checks | No |
 | `npm run test:geofences` | Geofence crossings and alerts | No |
+| `npm run test:site-analytics` | Website visit counting and figures | No |
 | `npm run test:notifications` | Message queue, retries and provider formats | No; stop the app first, because a running app also works through the shared message queue |
 | `npm run test:gps`, `npm run test:assistant` | Tracksolid client, chat assistant | No |
 
@@ -81,6 +82,6 @@ The payment tests mock provider responses. They do not charge a card or Mobile M
 
 ## Current limits
 
-The Contact page still shows placeholders for ANLIMA's phone, email and address. The rental terms and privacy notice need ANLIMA's approval. Monitoring, backups and analytics need a few one-off steps (`docs/monitoring.md`, `docs/backups.md`, `docs/analytics.md`).
+The Contact page still shows placeholders for ANLIMA's phone, email and address. The rental terms and privacy notice need ANLIMA's approval. Monitoring and backups need a few one-off steps (`docs/monitoring.md`, `docs/backups.md`).
 
 Keep `.env` out of Git. Set a stable `IDENTITY_ENCRYPTION_SECRET` before storing real Ghana Card records; changing encryption secrets later requires migrating those records. Use an HTTPS `BETTER_AUTH_URL` when deploying.

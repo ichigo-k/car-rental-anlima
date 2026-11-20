@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { money } from "@/lib/catalogue";
 import { can } from "@/lib/permissions";
 import { VERIFIED_PAYMENT } from "@/lib/refunds";
-import { daily, ranked, stats, umamiReady, UmamiError } from "@/lib/umami";
+import { daily, ranked, stats } from "@/lib/site-analytics";
 import { DailyVisits, Funnel, Ranked } from "@/components/analytics-charts";
 export const dynamic = "force-dynamic";
 const PERIODS = [7, 30, 90];
@@ -19,13 +19,6 @@ const minutes = (seconds: number) =>
   seconds >= 60
     ? `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s`
     : `${Math.round(seconds)}s`;
-const country = (code: string) => {
-  try {
-    return new Intl.DisplayNames("en", { type: "region" }).of(code) ?? code;
-  } catch {
-    return code || "Unknown";
-  }
-};
 // Change against the previous period of the same length.
 function change(now: number, before: number | undefined) {
   if (before === undefined || before === 0) return null;
@@ -60,29 +53,20 @@ export default async function Analytics({
   ]);
   const received = verified.reduce((s, p) => s + p.amount, 0);
 
-  const ready = umamiReady();
-  const [totals, series, pages, sources, countries, devices, events] = ready
-    ? await Promise.allSettled([
-        stats(range),
-        daily(range),
-        ranked(range, "path"),
-        ranked(range, "referrer"),
-        ranked(range, "country"),
-        ranked(range, "device", 5),
-        ranked(range, "event", 20),
-      ])
-    : [];
-  const value = <T,>(r: PromiseSettledResult<T> | undefined) =>
-    r?.status === "fulfilled" ? r.value : null;
-  const problem = [totals, series, pages, sources, countries, devices, events]
-    .map((r) =>
-      r?.status === "rejected"
-        ? r.reason instanceof UmamiError
-          ? r.reason.message
-          : "Some Umami figures could not be loaded."
-        : null,
-    )
-    .find(Boolean);
+  const [totals, series, pages, sources, devices, events] =
+    await Promise.allSettled([
+      stats(db, range),
+      daily(db, range),
+      ranked(db, range, "path"),
+      ranked(db, range, "referrerHost"),
+      ranked(db, range, "device", 5),
+      ranked(db, range, "type", 20),
+    ]);
+  const value = <T,>(r: PromiseSettledResult<T>) =>
+    r.status === "fulfilled" ? r.value : null;
+  const problem = [totals, series, pages, sources, devices, events].some(
+    (r) => r.status === "rejected",
+  );
   const t = value(totals);
   const eventCount = new Map(
     (value(events) ?? []).map((e) => [e.name, e.value]),
@@ -101,9 +85,9 @@ export default async function Analytics({
           <p className="eyebrow">WEBSITE</p>
           <h1>Analytics</h1>
           <p>
-            Visits to the public website from Umami (no cookies or personal
-            data), next to ANLIMA&apos;s own booking figures. Figures update
-            every few minutes.
+            Visits to the public website, counted by the site itself without
+            cookies or personal data, next to ANLIMA&apos;s own booking figures.
+            A visit is one person on one day.
           </p>
         </div>
       </div>
@@ -118,24 +102,17 @@ export default async function Analytics({
           </Link>
         ))}
       </nav>
-      {!ready && (
-        <p className="admin-callout">
-          Website statistics are not connected yet. Add UMAMI_API_KEY (from
-          Umami: Settings → API keys) and NEXT_PUBLIC_UMAMI_WEBSITE_ID to the
-          server settings. See docs/analytics.md.
-        </p>
-      )}
       {problem && (
         <p className="admin-callout" role="alert">
-          {problem}
+          Some figures could not be loaded. Refresh the page to try again.
         </p>
       )}
       <section className="report-summary" aria-label="Summary">
         {t && [
           tile(
-            "Visitors",
-            t.current.visitors.toLocaleString("en-GB"),
-            change(t.current.visitors, t.previous?.visitors),
+            "Visits",
+            t.current.visits.toLocaleString("en-GB"),
+            change(t.current.visits, t.previous?.visits),
           ),
           tile(
             "Page views",
@@ -177,12 +154,13 @@ export default async function Analytics({
         <section className="admin-panel">
           <h2>Booking funnel</h2>
           <p className="muted">
-            Website steps counted by Umami. ANLIMA&apos;s own totals above can
-            be higher, because Umami does not count visitors who block tracking.
+            Website steps counted by the site. ANLIMA&apos;s own totals above
+            can be higher, because visitors who ask not to be tracked are not
+            counted.
           </p>
           <Funnel
             steps={[
-              ...(t ? [{ label: "Visitors", value: t.current.visitors }] : []),
+              ...(t ? [{ label: "Visits", value: t.current.visits }] : []),
               ...STEPS.map(([key, label]) => ({
                 label,
                 value: eventCount.get(key) ?? 0,
@@ -210,16 +188,6 @@ export default async function Analytics({
               name: r.name || "Direct or unknown",
             }))}
             empty="No referring websites in this period."
-          />
-        )}
-        {value(countries) && (
-          <Ranked
-            title="Countries"
-            rows={value(countries)!.map((r) => ({
-              ...r,
-              name: country(r.name),
-            }))}
-            empty="No visits in this period."
           />
         )}
         {value(devices) && (

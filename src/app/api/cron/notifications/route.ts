@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { removeAbandonedPhotos } from "@/lib/photos";
 import { refreshPendingRefunds } from "@/lib/refunds";
 import { removeOldRejectedDocuments } from "@/lib/documents";
+import { removeOldSiteEvents } from "@/lib/site-analytics";
 import { checkOperations, cronAuthorised } from "@/lib/monitoring";
 import { fleetPositions } from "@/lib/gps";
 import { evaluateGeofences } from "@/lib/geofences";
@@ -12,7 +13,8 @@ import { evaluateGeofences } from "@/lib/geofences";
 // then sends or retries everything that is due. Also removes inspection photos
 // that were uploaded but never saved with an inspection, and asks the payment
 // providers for the status of refunds still in progress, and deletes customer
-// documents rejected more than 30 days ago, and checks car positions against
+// documents rejected more than 30 days ago and website analytics older than 13
+// months, and checks car positions against
 // the geofences. Finally records that
 // it ran and emails the operations inbox about anything that needs attention.
 export const dynamic = "force-dynamic";
@@ -25,6 +27,7 @@ export async function GET(req: Request) {
   const abandonedPhotos = await removeAbandonedPhotos(db);
   const refundsChecked = await refreshPendingRefunds();
   const rejectedDocumentsRemoved = await removeOldRejectedDocuments(db);
+  const oldSiteEventsRemoved = await removeOldSiteEvents(db);
   const tracked = await db.vehicle.findMany({
     where: { gpsImei: { not: null } },
     select: { id: true, gpsImei: true },
@@ -42,6 +45,7 @@ export async function GET(req: Request) {
       abandonedPhotos,
       refundsChecked,
       rejectedDocumentsRemoved,
+      oldSiteEventsRemoved,
       geofenceEvents,
       problems: problems.map((p) => p.key),
     },

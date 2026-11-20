@@ -536,3 +536,21 @@ model GeofenceEvent {
   @@index([acknowledgedAt])
   @@index([createdAt])
 }
+
+// First-party website analytics (Guide §10): page views of public pages and
+// booking-funnel events. No cookies, IP addresses or personal data: `visitor`
+// is a code that changes every day, so a person cannot be identified or
+// followed across days. Kept for 13 months.
+model SiteEvent {
+  id           String   @id @default(cuid())
+  at           DateTime @default(now())
+  type         String
+  path         String
+  referrerHost String?
+  device       String
+  visitor      String
+  data         Json?
+
+  @@index([at])
+  @@index([type, at])
+}
