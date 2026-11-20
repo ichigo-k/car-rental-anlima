@@ -52,8 +52,13 @@ export default async function AdminLayout({
     },
     can(role, "payment.review") && {
       href: "/admin/payments",
-      label: "Payments & reports",
+      label: "Payments",
       icon: 4,
+    },
+    can(role, "report.export") && {
+      href: "/admin/reports",
+      label: "Reports",
+      icon: 6,
     },
     can(role, "customer.read") && {
       href: "/admin/customers",

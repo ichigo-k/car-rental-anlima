@@ -77,6 +77,6 @@ The payment tests mock provider responses. They do not charge a card or Mobile M
 
 ## Current limits
 
-The Contact page still shows placeholders for ANLIMA's phone, email and address. The rental terms and privacy notice need ANLIMA's approval. Not built yet: filterable payment and fleet reports, uptime and error monitoring, and geofences.
+The Contact page still shows placeholders for ANLIMA's phone, email and address. The rental terms and privacy notice need ANLIMA's approval. Not built yet: uptime and error monitoring, and geofences.
 
 Keep `.env` out of Git. Set a stable `IDENTITY_ENCRYPTION_SECRET` before storing real Ghana Card records; changing encryption secrets later requires migrating those records. Use an HTTPS `BETTER_AUTH_URL` when deploying.

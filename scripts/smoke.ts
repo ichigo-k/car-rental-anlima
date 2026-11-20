@@ -609,6 +609,48 @@ async function main() {
   });
   assert.equal(staffReport.status, 200);
   assert.match(await staffReport.text(), new RegExp(created.reference));
+  // Reports export exactly what the filters show, and every export is
+  // recorded with its filters (Guide AC-09).
+  const exportOf = async (query: string) => {
+    const r = await fetch(`${base}/api/admin/reports?${query}`, {
+      headers: { Cookie: cookie },
+    });
+    assert.equal(r.status, 200, query);
+    return r.text();
+  };
+  // Data rows only: the header repeats the search text.
+  const bookingRows = (csv: string) =>
+    csv.split("\r\n").filter((line) => line.startsWith(`"AN-`));
+  const onlyThis = await exportOf(`type=bookings&q=${created.reference}`);
+  assert.match(onlyThis, /Filters: search/, "the export records its filters");
+  assert.deepEqual(
+    bookingRows(onlyThis).map((line) => line.split(",")[0]),
+    [`"${created.reference}"`],
+    "a filtered export contains only matching bookings",
+  );
+  assert.deepEqual(
+    bookingRows(
+      await exportOf(`type=bookings&q=${created.reference}&status=CANCELLED`),
+    ),
+    [],
+    "a status filter excludes other bookings",
+  );
+  const screen = await fetch(
+    `${base}/admin/reports?type=bookings&q=${created.reference}`,
+    { headers: { Cookie: cookie } },
+  );
+  assert.match(await screen.text(), new RegExp(created.reference));
+  assert.match(
+    await exportOf(`type=fleet&vehicleId=${car.id}`),
+    new RegExp(car.name),
+  );
+  for (const type of ["payments", "returns", "customers"])
+    await exportOf(`type=${type}`);
+  const exportAudit = await db.auditEvent.findFirst({
+    where: { actorId: userId, action: "REPORT_EXPORTED", entityId: "bookings" },
+    orderBy: { createdAt: "desc" },
+  });
+  assert.match(exportAudit?.detail ?? "", /status CANCELLED/);
   assert.equal(
     (await db.booking.findUniqueOrThrow({ where: { id: created.id } })).status,
     "RETURNED",

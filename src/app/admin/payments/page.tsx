@@ -41,10 +41,12 @@ export default async function Payments() {
   return (
     <>
       <div className="admin-top">
-        <h1>Payments & reports</h1>
-        <a href="/api/admin/reports" className="button small">
-          Export reservations CSV
-        </a>
+        <h1>Payments</h1>
+        {can(current.user.role, "report.export") && (
+          <a href="/admin/reports?type=payments" className="button small">
+            Payment reports
+          </a>
+        )}
       </div>
       <p className="muted">
         Latest 100 payment attempts. Only verified transactions are marked
