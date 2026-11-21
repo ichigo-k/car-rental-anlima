@@ -32,7 +32,8 @@ export default async function Fleet({
       const start = new Date(q.pickup),
         end = new Date(q.returnAt);
       quote(start, end, 1, 0);
-      if (start <= new Date()) throw new Error("Choose a future pickup date.");
+      if (start <= new Date())
+        throw new Error("Pick-up must be later than the current time.");
       interval = {
         bookings: {
           none: { ...overlaps(start, end), ...blockingWhere(new Date()) },

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { trackEvent } from "./analytics";
 // iPhone Safari shows an empty date field as blank, so show a hint until a
@@ -14,9 +14,18 @@ function DateField({
   initial?: string;
 }) {
   const [filled, setFilled] = useState(!!initial);
+  // Past times cannot be picked. Set after hydration so the server and
+  // browser render the same markup.
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    if (ref.current) ref.current.min = now.toISOString().slice(0, 16);
+  }, []);
   return (
     <div className={filled ? "date-field has-value" : "date-field"}>
       <input
+        ref={ref}
         aria-label={label}
         type="datetime-local"
         name={name}
@@ -56,7 +65,7 @@ export function SearchForm({
           return;
         }
         if (new Date(start) <= new Date()) {
-          setError("Choose a future pickup date.");
+          setError("Pick-up must be later than the current time.");
           return;
         }
         setError("");
