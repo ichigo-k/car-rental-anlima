@@ -3,7 +3,7 @@ import { z } from "zod";
 import { session } from "@/lib/auth";
 import { trustedOrigin } from "@/lib/request";
 import { db } from "@/lib/db";
-import { priceRental, PricingError } from "@/lib/pricing";
+import { bookingWindowIssue, priceRental, PricingError } from "@/lib/pricing";
 import { getFees } from "@/lib/fees";
 import { rentalOptionsInput } from "@/lib/reservation";
 import { CouponError, promotionQuote } from "@/lib/promotions";
@@ -39,11 +39,8 @@ export async function POST(req: Request) {
       );
     const pickup = new Date(v.pickup),
       end = new Date(v.returnAt);
-    if (pickup <= new Date())
-      return NextResponse.json(
-        { error: "Choose a future pickup time." },
-        { status: 400 },
-      );
+    const issue = bookingWindowIssue(pickup, end);
+    if (issue) return NextResponse.json({ error: issue }, { status: 400 });
     const base = priceRental(pickup, end, car, v, await getFees(db));
     const offer = await promotionQuote(
       db,

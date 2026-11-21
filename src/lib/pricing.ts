@@ -1,5 +1,20 @@
 import { money } from "./catalogue";
 import { durationDiscountPercent, type Fees } from "./fees";
+// Customer bookings need notice to prepare the car and check documents, and
+// last at least a day (a shorter rental is still charged as a full day).
+export const MIN_NOTICE_HOURS = 2;
+export const MIN_RENTAL_HOURS = 24;
+export function bookingWindowIssue(
+  pickup: Date,
+  returnAt: Date,
+  now = new Date(),
+) {
+  if (!(pickup.getTime() >= now.getTime() + MIN_NOTICE_HOURS * 3600000))
+    return `Pick-up must be at least ${MIN_NOTICE_HOURS} hours from now.`;
+  if (!(returnAt.getTime() - pickup.getTime() >= MIN_RENTAL_HOURS * 3600000))
+    return `The shortest rental is ${MIN_RENTAL_HOURS} hours. Choose a later return.`;
+  return null;
+}
 export function quote(
   pickup: Date,
   returnAt: Date,

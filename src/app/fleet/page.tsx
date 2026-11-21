@@ -8,7 +8,12 @@ import { publicReviews } from "@/lib/reviews";
 import { VehicleCard } from "@/components/vehicle-card";
 import { SearchForm } from "@/components/search-form";
 import { db } from "@/lib/db";
-import { quote, blockingWhere, overlaps } from "@/lib/pricing";
+import {
+  quote,
+  blockingWhere,
+  bookingWindowIssue,
+  overlaps,
+} from "@/lib/pricing";
 import type { Metadata } from "next";
 import { publicPage } from "@/lib/seo";
 export const metadata: Metadata = publicPage(
@@ -32,8 +37,8 @@ export default async function Fleet({
       const start = new Date(q.pickup),
         end = new Date(q.returnAt);
       quote(start, end, 1, 0);
-      if (start <= new Date())
-        throw new Error("Pick-up must be later than the current time.");
+      const issue = bookingWindowIssue(start, end);
+      if (issue) throw new Error(issue);
       interval = {
         bookings: {
           none: { ...overlaps(start, end), ...blockingWhere(new Date()) },

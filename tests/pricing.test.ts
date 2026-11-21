@@ -97,3 +97,33 @@ test("enforces each car's driver option", () => {
     ),
   );
 });
+test("bookings need 2 hours' notice and last at least 24 hours", async () => {
+  const { bookingWindowIssue } = await import("../src/lib/pricing");
+  const now = new Date("2026-11-21T08:00:00Z");
+  const at = (iso: string) => new Date(iso);
+  assert.match(
+    bookingWindowIssue(
+      at("2026-11-21T09:59:00Z"),
+      at("2026-11-23T10:00:00Z"),
+      now,
+    )!,
+    /at least 2 hours/,
+  );
+  assert.match(
+    bookingWindowIssue(
+      at("2026-11-21T10:00:00Z"),
+      at("2026-11-21T10:06:00Z"),
+      now,
+    )!,
+    /shortest rental is 24 hours/,
+  );
+  assert.equal(
+    bookingWindowIssue(
+      at("2026-11-21T10:00:00Z"),
+      at("2026-11-22T10:00:00Z"),
+      now,
+    ),
+    null,
+  );
+  assert.ok(bookingWindowIssue(at("invalid"), at("2026-11-22T10:00:00Z"), now));
+});

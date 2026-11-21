@@ -5,7 +5,7 @@ import Link from "next/link";
 import Stepper, { Step } from "./stepper/Stepper";
 import { money } from "@/lib/catalogue";
 import { displayPhone } from "@/lib/phone";
-import { quote, type QuoteItem } from "@/lib/pricing";
+import { bookingWindowIssue, quote, type QuoteItem } from "@/lib/pricing";
 import {
   ghanaCardInput,
   licenceValidThrough,
@@ -192,10 +192,14 @@ export function BookingForm({
         className="booking-signin stack"
         onSubmit={(e) => {
           e.preventDefault();
-          if (!pricing || new Date(values.pickup) <= new Date()) {
-            setError(
-              "Choose a future pickup time and a later return, up to 90 days apart.",
-            );
+          const issue = pricing
+            ? bookingWindowIssue(
+                new Date(values.pickup),
+                new Date(values.returnAt),
+              )
+            : "Choose a pickup time and a later return, up to 90 days apart.";
+          if (issue) {
+            setError(issue);
             return;
           }
           const target = `/fleet/${car.slug}?${new URLSearchParams({ pickup: values.pickup, returnAt: values.returnAt, location: values.location })}`;
@@ -281,10 +285,11 @@ export function BookingForm({
     );
     if (inputs)
       for (const input of inputs) if (!input.reportValidity()) return false;
-    if (step === 1 && (!pricing || new Date(values.pickup) <= new Date())) {
-      setError(
-        "Choose a future pickup time and a later return, up to 90 days apart.",
-      );
+    const windowIssue = pricing
+      ? bookingWindowIssue(new Date(values.pickup), new Date(values.returnAt))
+      : "Choose a pickup time and a later return, up to 90 days apart.";
+    if (step === 1 && windowIssue) {
+      setError(windowIssue);
       return false;
     }
     if (

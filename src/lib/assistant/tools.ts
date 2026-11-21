@@ -2,7 +2,13 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { db } from "../db";
 import { money } from "../catalogue";
-import { blockingWhere, NO_OPTIONS, overlaps, priceRental } from "../pricing";
+import {
+  blockingWhere,
+  bookingWindowIssue,
+  NO_OPTIONS,
+  overlaps,
+  priceRental,
+} from "../pricing";
 import { getFees } from "../fees";
 
 // Read-only tools over public information. None of them can see customers,
@@ -127,8 +133,8 @@ async function checkAvailability(input: z.infer<typeof AvailabilityInput>) {
     !Number.isFinite(returnAt.getTime())
   )
     return { available: false, reason: "The dates could not be read." };
-  if (pickup <= new Date())
-    return { available: false, reason: "Pickup must be in the future." };
+  const windowIssue = bookingWindowIssue(pickup, returnAt);
+  if (windowIssue) return { available: false, reason: windowIssue };
   let price;
   try {
     price = priceRental(

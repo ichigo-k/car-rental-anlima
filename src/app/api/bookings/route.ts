@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { session } from "@/lib/auth";
 import {
   blockingWhere,
+  bookingWindowIssue,
   overlaps,
   priceRental,
   PricingError,
@@ -72,14 +73,13 @@ export async function POST(req: Request) {
       { error: "Use the email address on your signed-in account." },
       { status: 400 },
     );
-  if (
-    pickup <= new Date() ||
-    (!v.withDriver && !licenceValidThrough(v.licenceExpiry!, returnAt))
-  )
+  const windowIssue = bookingWindowIssue(pickup, returnAt);
+  if (windowIssue)
+    return NextResponse.json({ error: windowIssue }, { status: 400 });
+  if (!v.withDriver && !licenceValidThrough(v.licenceExpiry!, returnAt))
     return NextResponse.json(
       {
-        error:
-          "Pickup must be in the future and your licence must remain valid for the rental.",
+        error: "Your licence must remain valid for the whole rental.",
       },
       { status: 400 },
     );

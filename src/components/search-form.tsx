@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { trackEvent } from "./analytics";
+import { bookingWindowIssue, MIN_NOTICE_HOURS } from "@/lib/pricing";
 // iPhone Safari shows an empty date field as blank, so show a hint until a
 // date is chosen.
 function DateField({
@@ -14,12 +15,14 @@ function DateField({
   initial?: string;
 }) {
   const [filled, setFilled] = useState(!!initial);
-  // Past times cannot be picked. Set after hydration so the server and
+  // Times inside the booking notice cannot be picked. Set after hydration so the server and
   // browser render the same markup.
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => {
     const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    now.setMinutes(
+      now.getMinutes() - now.getTimezoneOffset() + MIN_NOTICE_HOURS * 60,
+    );
     if (ref.current) ref.current.min = now.toISOString().slice(0, 16);
   }, []);
   return (
@@ -64,8 +67,9 @@ export function SearchForm({
           setError("Return must be after pickup.");
           return;
         }
-        if (new Date(start) <= new Date()) {
-          setError("Pick-up must be later than the current time.");
+        const issue = bookingWindowIssue(new Date(start), new Date(end));
+        if (issue) {
+          setError(issue);
           return;
         }
         setError("");
