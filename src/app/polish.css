@@ -329,3 +329,12 @@ p {
   text-align: center;
   padding: 50px 20px;
 }
+
+/* Payment choices stack when the payment panel is narrow, so the provider
+   names never run into the card edges. */
+.payment-providers {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.payment-providers strong {
+  overflow-wrap: anywhere;
+}

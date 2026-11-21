@@ -153,7 +153,9 @@ export function PaymentButton({
       >
         {busy
           ? "Opening secure checkout..."
-          : `Pay with ${providerName(provider)}`}
+          : enabled
+            ? `Pay with ${providerName(provider)}`
+            : "Payment not available yet"}
       </button>
       {error && (
         <p className="error" role="alert">
