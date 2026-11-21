@@ -96,3 +96,58 @@ test("labels positions honestly as live, stale, offline or without a fix", () =>
   assert.equal(expired.latitude, null);
   assert.equal(normalise("car", undefined, now).freshness, "NO_FIX");
 });
+test("picks the tracker's relay command for engine cut-off and restore", async () => {
+  const { relayInstruction } = await import("../src/lib/tracksolid");
+  const list = [
+    { id: 81, orderContent: "SOS,A,{0},{1},{2}#" },
+    {
+      id: 163,
+      orderName: "Fuel/Power Remote Control",
+      orderContent: "RELAY,{0}#",
+    },
+    { id: 99, orderContent: "{0}" },
+  ];
+  assert.deepEqual(relayInstruction(list, "cut"), {
+    inst_id: "163",
+    inst_template: "RELAY,{0}#",
+    params: ["1"],
+    is_cover: "true",
+  });
+  assert.deepEqual(relayInstruction(list, "restore")?.params, ["0"]);
+  // Without a relay command, the user-defined command carries it.
+  assert.deepEqual(relayInstruction([list[2]], "cut"), {
+    inst_id: "99",
+    inst_template: "{0}",
+    params: ["RELAY,1#"],
+    is_cover: "true",
+  });
+  assert.equal(relayInstruction([list[0]], "cut"), null);
+});
+test("reads the latest relay result from the tracker", async () => {
+  const { latestRelayOutcome } = await import("../src/lib/tracksolid");
+  assert.equal(latestRelayOutcome([{ code: "status#", isExecute: "1" }]), null);
+  assert.deepEqual(
+    latestRelayOutcome([
+      {
+        code: "RELAY,1#",
+        isExecute: "1",
+        content: "Cut off the fuel supply: Success!",
+        sendTime: "2026-11-21 08:00:00",
+      },
+      { code: "RELAY,0#", isExecute: "3", sendTime: "2026-11-21 09:00:00" },
+      { code: "status#", isExecute: "1", sendTime: "2026-11-21 10:00:00" },
+    ]),
+    {
+      action: "restore",
+      state: "WAITING",
+      reply: null,
+      sentAt: "2026-11-21T09:00:00.000Z",
+    },
+  );
+  assert.equal(
+    latestRelayOutcome([
+      { code: "RELAY,1#", isExecute: 0, sendTime: "2026-11-21 08:00:00" },
+    ])?.state,
+    "FAILED",
+  );
+});

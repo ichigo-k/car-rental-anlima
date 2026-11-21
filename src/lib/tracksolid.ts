@@ -227,3 +227,118 @@ export async function deviceLocations(
   }
   return results;
 }
+
+// Remote fuel/power cut-off (immobilisation) through the tracker's relay:
+// "RELAY,1#" cuts the fuel pump or starter circuit and "RELAY,0#" restores
+// it. Only works where the installer has wired the relay.
+export type TracksolidInstruction = {
+  id: string | number;
+  orderName?: string | null;
+  orderContent?: string | null;
+};
+export type RelayAction = "cut" | "restore";
+// The instruction to send, from the commands the device lists: its own relay
+// command if it has one, otherwise its user-defined command.
+export function relayInstruction(
+  list: TracksolidInstruction[],
+  action: RelayAction,
+) {
+  const value = action === "cut" ? "1" : "0";
+  const relay = list.find((i) =>
+    /^RELAY,\{0\}#$/i.test(i.orderContent?.trim() ?? ""),
+  );
+  if (relay)
+    return {
+      inst_id: String(relay.id),
+      inst_template: relay.orderContent!.trim(),
+      params: [value],
+      is_cover: "true",
+    };
+  const custom = list.find((i) => i.orderContent?.trim() === "{0}");
+  if (custom)
+    return {
+      inst_id: String(custom.id),
+      inst_template: "{0}",
+      params: [`RELAY,${value}#`],
+      is_cover: "true",
+    };
+  return null;
+}
+export async function sendRelay(
+  config: TracksolidConfig,
+  imei: string,
+  action: RelayAction,
+) {
+  return withToken(config, async (token) => {
+    const list =
+      (await call<TracksolidInstruction[]>(
+        config,
+        "jimi.open.instruction.list",
+        { access_token: token, imei },
+      )) ?? [];
+    const instruction = relayInstruction(list, action);
+    if (!instruction)
+      throw new TracksolidError(
+        -1,
+        "This tracker does not offer a fuel/power cut-off command",
+      );
+    await call(config, "jimi.open.instruction.send", {
+      access_token: token,
+      imei,
+      inst_param_json: JSON.stringify(instruction),
+    });
+  });
+}
+export type TracksolidInstructionResult = {
+  code?: string;
+  content?: string | null;
+  isExecute?: string | number;
+  sendTime?: string;
+};
+export type RelayOutcome = {
+  action: RelayAction;
+  state: "DONE" | "FAILED" | "WAITING" | "CANCELLED";
+  reply: string | null;
+  sentAt: string | null;
+};
+// The latest relay command among a device's command results.
+export function latestRelayOutcome(
+  results: TracksolidInstructionResult[],
+): RelayOutcome | null {
+  const relay = results
+    .map((r) => ({
+      r,
+      match: /^RELAY,([01])#$/i.exec(r.code?.trim() ?? ""),
+      at: parseTracksolidTime(r.sendTime),
+    }))
+    .filter((x) => x.match)
+    .sort((a, b) => (b.at?.getTime() ?? 0) - (a.at?.getTime() ?? 0))[0];
+  if (!relay) return null;
+  const execute = String(relay.r.isExecute);
+  return {
+    action: relay.match![1] === "1" ? "cut" : "restore",
+    state:
+      execute === "1"
+        ? "DONE"
+        : execute === "0"
+          ? "FAILED"
+          : execute === "4"
+            ? "CANCELLED"
+            : "WAITING",
+    reply: relay.r.content?.trim() || null,
+    sentAt: relay.at?.toISOString() ?? null,
+  };
+}
+export async function relayOutcome(config: TracksolidConfig, imei: string) {
+  const results = await withToken(config, (token) =>
+    call<TracksolidInstructionResult[]>(
+      config,
+      "jimi.open.instruction.result",
+      {
+        access_token: token,
+        imei,
+      },
+    ),
+  );
+  return latestRelayOutcome(results ?? []);
+}

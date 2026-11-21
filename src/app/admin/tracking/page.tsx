@@ -11,6 +11,7 @@ import { GpsMapping } from "@/components/gps-mapping";
 import { FleetLiveMap } from "@/components/fleet-live-map";
 import { GeofenceManager, type Fence } from "@/components/geofence-manager";
 import { AcknowledgeAlert } from "@/components/acknowledge-alert";
+import { EngineLock } from "@/components/engine-lock";
 import { isBreach } from "@/lib/geofences";
 export const dynamic = "force-dynamic";
 const label: Record<GpsPosition["freshness"], string> = {
@@ -89,6 +90,31 @@ export default async function Tracking({
   const config = tracksolidConfig();
   const canMap = config && can(current.user.role, "vehicle.write");
   const devices = canMap ? await listDevices(config).catch(() => null) : null;
+  // Engine cut-off: the latest command sent to each car decides its state.
+  const canImmobilise =
+    !!config &&
+    snapshot.source === "tracksolid" &&
+    can(current.user.role, "gps.immobilise");
+  const [lockEvents, rentals] = canImmobilise
+    ? await Promise.all([
+        db.auditEvent.findMany({
+          where: {
+            action: { in: ["IMMOBILISE_SENT", "IMMOBILISE_RESTORE_SENT"] },
+          },
+          orderBy: { createdAt: "desc" },
+          select: { entityId: true, action: true },
+        }),
+        db.booking.findMany({
+          where: { status: "CHECKED_OUT" },
+          select: { vehicleId: true, reference: true },
+        }),
+      ])
+    : [[], []];
+  const engineCut = new Map<string, boolean>();
+  for (const e of lockEvents)
+    if (!engineCut.has(e.entityId))
+      engineCut.set(e.entityId, e.action === "IMMOBILISE_SENT");
+  const rentalOf = new Map(rentals.map((r) => [r.vehicleId, r.reference]));
   return (
     <>
       <div className="admin-top">
@@ -137,6 +163,7 @@ export default async function Tracking({
               <th>Speed</th>
               <th>Ignition</th>
               <th>Map</th>
+              {canImmobilise && <th>Engine</th>}
             </tr>
           </thead>
           <tbody>
@@ -184,6 +211,20 @@ export default async function Tracking({
                       "—"
                     )}
                   </td>
+                  {canImmobilise && (
+                    <td>
+                      {car.gpsImei ? (
+                        <EngineLock
+                          vehicleId={car.id}
+                          carName={car.name}
+                          cut={engineCut.get(car.id) ?? false}
+                          rental={rentalOf.get(car.id) ?? null}
+                        />
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                  )}
                 </tr>
               );
             })}

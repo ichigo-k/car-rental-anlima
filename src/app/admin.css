@@ -1701,3 +1701,42 @@ tr.geofence-open td {
     grid-row: 2;
   }
 }
+.engine-lock {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  min-width: 150px;
+}
+.engine-lock .button.danger {
+  color: #b42318;
+}
+.engine-lock .button.danger:not(.secondary) {
+  background: #b42318;
+  color: white;
+}
+.engine-lock-confirm {
+  display: grid;
+  gap: 8px;
+  max-width: 300px;
+  padding: 10px;
+  border: 1px solid #f1c4bf;
+  border-radius: 6px;
+  background: #fff8f7;
+  font-size: 12.5px;
+}
+.engine-lock-confirm p {
+  margin: 0;
+}
+.engine-lock-confirm label {
+  display: grid;
+  gap: 4px;
+  font-weight: 600;
+}
+.engine-lock-error {
+  margin: 0;
+  color: #b42318;
+  font-size: 12.5px;
+}
+.engine-lock small {
+  color: #647181;
+}
