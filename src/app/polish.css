@@ -299,3 +299,33 @@ p {
   cursor: default;
   text-decoration: none;
 }
+
+/* Search results page. */
+.search-results {
+  background: #f3f3f9;
+  padding: 48px 0 90px;
+  min-height: 60vh;
+}
+.search-results-heading {
+  margin-bottom: 26px;
+}
+.search-results-heading h1 {
+  color: #012d5a;
+  font-size: clamp(28px, 4vw, 40px);
+  margin: 6px 0 8px;
+}
+.search-results-heading p:not(.eyebrow) {
+  color: #4d5b6a;
+  margin: 0;
+}
+.search-results .fleet-search-panel {
+  margin-bottom: 30px;
+}
+.search-results .filter-tabs {
+  background: transparent;
+  padding: 0;
+}
+.search-results .empty {
+  text-align: center;
+  padding: 50px 20px;
+}

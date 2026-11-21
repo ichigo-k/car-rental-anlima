@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { SectionHeading } from "@/components/marketing-sections";
 import { Header, Footer } from "@/components/header";
 import { FleetBrowser } from "@/components/fleet-browser";
@@ -8,12 +9,6 @@ import { publicReviews } from "@/lib/reviews";
 import { VehicleCard } from "@/components/vehicle-card";
 import { SearchForm } from "@/components/search-form";
 import { db } from "@/lib/db";
-import {
-  quote,
-  blockingWhere,
-  bookingWindowIssue,
-  overlaps,
-} from "@/lib/pricing";
 import type { Metadata } from "next";
 import { publicPage } from "@/lib/seo";
 export const metadata: Metadata = publicPage(
@@ -28,33 +23,11 @@ export default async function Fleet({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const q = await searchParams;
-  let error = "";
-  let interval = {};
-  if (q.pickup || q.returnAt) {
-    try {
-      if (!q.pickup || !q.returnAt)
-        throw new Error("Choose both a pickup and return date.");
-      const start = new Date(q.pickup),
-        end = new Date(q.returnAt);
-      quote(start, end, 1, 0);
-      const issue = bookingWindowIssue(start, end);
-      if (issue) throw new Error(issue);
-      interval = {
-        bookings: {
-          none: { ...overlaps(start, end), ...blockingWhere(new Date()) },
-        },
-        blocks: { none: { start: { lt: end }, end: { gt: start } } },
-      };
-    } catch (e) {
-      error = (e as Error).message;
-    }
-  }
+  // Searches made before results had their own page.
+  if (q.pickup || q.returnAt)
+    redirect(`/search?${new URLSearchParams(q as Record<string, string>)}`);
   const cars = await db.vehicle.findMany({
-    where: {
-      status: "AVAILABLE",
-      ...interval,
-      ...(q.location ? { pickupPoints: { has: q.location } } : {}),
-    },
+    where: { status: "AVAILABLE" },
     orderBy: { dailyRate: "asc" },
   });
   const reviews = await publicReviews(db);
@@ -63,10 +36,6 @@ export default async function Fleet({
     orderBy: { createdAt: "asc" },
     take: 4,
   });
-  const query =
-    !error && q.pickup && q.returnAt
-      ? `?${new URLSearchParams({ pickup: q.pickup, returnAt: q.returnAt, ...(q.location ? { location: q.location } : {}) })}`
-      : "";
   return (
     <>
       <section className="design-hero cars-hero">
@@ -106,15 +75,10 @@ export default async function Fleet({
                 selected car.
               </p>
             </div>
-            {error && (
-              <p className="error" role="alert">
-                {error}
-              </p>
-            )}
             <FleetBrowser
-              key={`${query}:${q.category ?? ""}`}
+              key={q.category ?? ""}
               cars={cars}
-              query={query}
+              query=""
               initialCategory={q.category}
             />
           </div>

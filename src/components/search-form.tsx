@@ -84,9 +84,7 @@ export function SearchForm({
           category: category || "any",
           location: String(f.get("location")),
         });
-        startTransition(() =>
-          router.push(`/fleet?${params.toString()}#browse`),
-        );
+        startTransition(() => router.push(`/search?${params.toString()}`));
       }}
     >
       <label>
