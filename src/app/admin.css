@@ -145,6 +145,9 @@
   position: sticky;
   top: 0;
   height: 100dvh;
+  /* Scrolls on its own when the menu is taller than the window. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: white;
   color: #092b4b;
   padding: 24px 20px;
@@ -688,6 +691,7 @@
     min-width: 0;
     position: static;
     height: auto;
+    overflow: visible;
     padding: 14px 20px;
     display: block;
   }
