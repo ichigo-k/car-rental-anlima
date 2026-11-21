@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { displayPhone, smsNumber } from "@/lib/phone";
+import { ResendCode } from "./resend-code";
 // Reset by email link or by SMS code. Replies never reveal whether an
 // account exists for the email or number.
 export function ForgotPassword() {
@@ -16,11 +17,19 @@ export function ForgotPassword() {
     setError("");
     try {
       await action();
+      return true;
     } catch (e) {
       setError((e as Error).message);
+      return false;
     } finally {
       setBusy(false);
     }
+  }
+  async function sendResetCode(number: string) {
+    const r = await authClient.phoneNumber.requestPasswordReset({
+      phoneNumber: number,
+    });
+    if (r.error) throw new Error(r.error.message || "Please try again.");
   }
   if (done)
     return (
@@ -92,11 +101,7 @@ export function ForgotPassword() {
             void run(async () => {
               if (!number)
                 throw new Error("Enter the mobile number on your account.");
-              const r = await authClient.phoneNumber.requestPasswordReset({
-                phoneNumber: number,
-              });
-              if (r.error)
-                throw new Error(r.error.message || "Please try again.");
+              await sendResetCode(number);
               setCodeSentTo(number);
             });
           }}
@@ -162,6 +167,20 @@ export function ForgotPassword() {
           </label>
           <button className="button" disabled={busy}>
             Change password
+          </button>
+          <ResendCode
+            disabled={busy}
+            send={() => run(() => sendResetCode(codeSentTo))}
+          />
+          <button
+            type="button"
+            className="text-link"
+            onClick={() => {
+              setCodeSentTo("");
+              setError("");
+            }}
+          >
+            Use a different number
           </button>
         </form>
       )}

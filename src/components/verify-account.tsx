@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { displayPhone, smsNumber } from "@/lib/phone";
+import { ResendCode } from "./resend-code";
 export function VerifyAccount({
   email,
   emailVerified,
@@ -28,11 +29,17 @@ export function VerifyAccount({
     setError("");
     try {
       await action();
+      return true;
     } catch (e) {
       setError((e as Error).message);
+      return false;
     } finally {
       setBusy(false);
     }
+  }
+  async function sendCode(number: string) {
+    const r = await authClient.phoneNumber.sendOtp({ phoneNumber: number });
+    if (r.error) throw new Error(r.error.message || "Could not send the code.");
   }
   const done = emailConfirmed && !!verifiedPhone;
   // The email link usually opens in another tab or app, so check for the
@@ -116,13 +123,7 @@ export function VerifyAccount({
                   throw new Error(
                     "Enter a Ghana number like 024 123 4567, or an international number starting with +.",
                   );
-                const r = await authClient.phoneNumber.sendOtp({
-                  phoneNumber: number,
-                });
-                if (r.error)
-                  throw new Error(
-                    r.error.message || "Could not send the code.",
-                  );
+                await sendCode(number);
                 setCodeSentTo(number);
               });
             }}
@@ -182,10 +183,17 @@ export function VerifyAccount({
             <button className="button small" disabled={busy}>
               Confirm number
             </button>
+            <ResendCode
+              disabled={busy}
+              send={() => run(() => sendCode(codeSentTo))}
+            />
             <button
               type="button"
               className="text-link"
-              onClick={() => setCodeSentTo("")}
+              onClick={() => {
+                setCodeSentTo("");
+                setError("");
+              }}
             >
               Use a different number
             </button>

@@ -287,3 +287,15 @@ p {
     animation: none;
   }
 }
+
+/* "Send a new code" under SMS code forms. */
+.resend-code {
+  margin: 0;
+  font-size: 13px;
+  color: #647181;
+}
+.resend-code .text-link:disabled {
+  color: #8a96a3;
+  cursor: default;
+  text-decoration: none;
+}
