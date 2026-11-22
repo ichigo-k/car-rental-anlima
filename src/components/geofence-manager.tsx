@@ -107,6 +107,10 @@ function Editor({
   }, [ready, f]);
 
   async function save() {
+    if (f.name.trim().length < 2) {
+      setError("Give the geofence a name, e.g. Greater Accra.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -173,7 +177,9 @@ function Editor({
           <input
             value={f.name}
             onChange={(e) => setF({ ...f, name: e.target.value })}
-            placeholder="Greater Accra"
+            placeholder="e.g. Greater Accra"
+            required
+            minLength={2}
             maxLength={80}
           />
         </label>

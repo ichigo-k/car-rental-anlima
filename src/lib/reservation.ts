@@ -30,7 +30,7 @@ export const reservationInput = z
     pickup: z.iso.datetime(),
     returnAt: z.iso.datetime(),
     location: z.string().trim().min(3).max(120),
-    customerName: z.string().trim().min(2).max(120),
+    customerName: z.string().trim().min(2, "Enter your full name.").max(120),
     customerEmail: z.email().max(254),
     phone: z
       .string()

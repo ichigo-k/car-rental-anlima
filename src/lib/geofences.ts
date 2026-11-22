@@ -12,7 +12,11 @@ const lat = z.number().min(-90).max(90);
 const lng = z.number().min(-180).max(180);
 export const geofenceInput = z
   .object({
-    name: z.string().trim().min(2).max(80),
+    name: z
+      .string()
+      .trim()
+      .min(2, "Give the geofence a name, e.g. Greater Accra.")
+      .max(80),
     kind: z.enum(GEOFENCE_KINDS),
     shape: z.enum(["CIRCLE", "POLYGON"]),
     centerLat: lat.nullable().optional(),
