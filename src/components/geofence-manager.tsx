@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import type * as Leaflet from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { drawFence, type FenceShape } from "@/lib/geofence-shapes";
+import { GHANA_REGIONS } from "@/lib/ghana-regions";
 
 export type Fence = FenceShape & {
   id: string;
@@ -95,7 +96,8 @@ function Editor({
     if (!ready || !L || !layer) return;
     layer.clearLayers();
     const shape = drawFence(L, layer, { ...f, name: f.name || "New area" });
-    if (f.shape === "POLYGON")
+    // Corner dots help when outlining by hand; a region has too many.
+    if (f.shape === "POLYGON" && (f.points?.length ?? 0) <= 60)
       for (const p of f.points ?? [])
         L.circleMarker(p, { radius: 4, color: "#012d5a", weight: 2 }).addTo(
           layer,
@@ -196,6 +198,36 @@ function Editor({
               No-go area: alert when a car enters
             </option>
           </select>
+        </label>
+        <label>
+          Start from a region · optional
+          <select
+            value=""
+            onChange={(e) => {
+              const region = GHANA_REGIONS.find(
+                (r) => r.name === e.target.value,
+              );
+              if (!region) return;
+              framed.current = false;
+              setF((v) => ({
+                ...v,
+                shape: "POLYGON",
+                points: region.points,
+                name: v.name.trim() ? v.name : `${region.name} Region`,
+              }));
+            }}
+          >
+            <option value="">Choose a Ghana region…</option>
+            {GHANA_REGIONS.map((r) => (
+              <option key={r.name} value={r.name}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+          <small className="field-hint">
+            Fills in the region&apos;s border, accurate to about 1 km (©
+            OpenStreetMap contributors). Use Clear to start again by hand.
+          </small>
         </label>
         <label>
           Shape

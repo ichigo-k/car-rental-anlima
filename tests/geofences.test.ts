@@ -83,3 +83,35 @@ test("needs a complete shape", () => {
     true,
   );
 });
+test("region outlines contain their own towns and not their neighbours'", async () => {
+  const { GHANA_REGIONS } = await import("../src/lib/ghana-regions");
+  const { geofenceInput } = await import("../src/lib/geofences");
+  assert.equal(GHANA_REGIONS.length, 16);
+  const region = (name: string) => {
+    const r = GHANA_REGIONS.find((x) => x.name === name)!;
+    return { shape: "POLYGON", points: r.points } as Parameters<
+      typeof contains
+    >[0];
+  };
+  const accra = [5.6037, -0.187] as const;
+  const tema = [5.6698, -0.0166] as const;
+  const kumasi = [6.6885, -1.6244] as const;
+  const tamale = [9.4034, -0.8424] as const;
+  assert.ok(contains(region("Greater Accra"), ...accra));
+  assert.ok(contains(region("Greater Accra"), ...tema));
+  assert.ok(!contains(region("Greater Accra"), ...kumasi));
+  assert.ok(contains(region("Ashanti"), ...kumasi));
+  assert.ok(!contains(region("Ashanti"), ...accra));
+  assert.ok(contains(region("Northern"), ...tamale));
+  // Every outline is a valid geofence.
+  for (const r of GHANA_REGIONS)
+    assert.ok(
+      geofenceInput.safeParse({
+        name: r.name,
+        kind: "ALLOWED",
+        shape: "POLYGON",
+        points: r.points,
+      }).success,
+      r.name,
+    );
+});
