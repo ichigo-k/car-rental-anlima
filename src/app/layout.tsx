@@ -13,6 +13,7 @@ import { BookingTour } from "@/components/booking-tour";
 import { ChatWidget } from "@/components/chat-widget";
 import { OPEN_GRAPH, siteUrl } from "@/lib/seo";
 import { Analytics } from "@/components/analytics";
+import { LiveChat } from "@/components/live-chat";
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -41,6 +42,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <BookingTour />
         <ChatWidget enabled={!!process.env.ANTHROPIC_API_KEY} />
         <Analytics />
+        <LiveChat
+          propertyId={process.env.TAWK_PROPERTY_ID}
+          widgetId={process.env.TAWK_WIDGET_ID}
+        />
       </body>
     </html>
   );
