@@ -24,6 +24,10 @@ export const metadata: Metadata = {
   title: { default: "ANLIMA | Drive with Confidence", template: "%s | ANLIMA" },
   description:
     "Find your next drive with ANLIMA Car Rental. Explore our fleet and reserve your vehicle in Accra, Ghana.",
+  icons: {
+    icon: { url: "/images/Anlima.png", type: "image/png" },
+    apple: "/images/Anlima.png",
+  },
   openGraph: {
     ...OPEN_GRAPH,
     images: [
