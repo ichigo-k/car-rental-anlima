@@ -1744,3 +1744,7 @@ tr.geofence-open td {
 .engine-lock small {
   color: #647181;
 }
+.admin-form-actions .text-link.danger {
+  margin-left: auto;
+  color: #b42318;
+}

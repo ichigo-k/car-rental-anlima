@@ -64,3 +64,36 @@ export async function PATCH(
     );
   }
 }
+// Removes a promotion for good. Bookings that used it keep their discount and
+// the promotion's name; only the link to it is cleared.
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const current = await session();
+  if (!current)
+    return NextResponse.json({ error: "Sign in required" }, { status: 401 });
+  if (
+    !trustedOrigin(req) ||
+    !current.user.twoFactorEnabled ||
+    !can(current.user.role, "promotion.manage")
+  )
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { id } = await params;
+  const promotion = await db.promotion
+    .delete({ where: { id } })
+    .catch(() => null);
+  if (!promotion)
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  await db.auditEvent.create({
+    data: {
+      actorId: current.user.id,
+      action: "PROMOTION_DELETED",
+      entityId: id,
+      detail: promotion.code
+        ? `${promotion.name} (${promotion.code})`
+        : promotion.name,
+    },
+  });
+  return NextResponse.json({ ok: true });
+}
