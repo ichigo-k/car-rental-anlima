@@ -87,15 +87,11 @@ export default async function SignIn({
           )}
 
           <SignInForm
-            providers={{
-              google: !!(
+            google={
+              !!(
                 process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-              ),
-              facebook: !!(
-                process.env.FACEBOOK_CLIENT_ID &&
-                process.env.FACEBOOK_CLIENT_SECRET
-              ),
-            }}
+              )
+            }
           />
 
           <p className="auth-legal">

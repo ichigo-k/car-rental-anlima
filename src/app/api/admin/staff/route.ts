@@ -83,7 +83,7 @@ export async function POST(req: Request) {
         !target.accounts.some((a) => a.providerId === "credential")
       )
         throw new StaffError(
-          "Staff need an email-and-password login for two-step sign-in. Ask the person to create an account with email instead of Google or Facebook.",
+          "Staff need an email-and-password login for two-step sign-in. Ask the person to create an account with email instead of Google.",
         );
       if (nextRole !== target.role)
         await tx.user.update({

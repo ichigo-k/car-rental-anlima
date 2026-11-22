@@ -59,14 +59,6 @@ The link works for 24 hours. If you did not create an account, ignore this email
           },
         }
       : {}),
-    ...(process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET
-      ? {
-          facebook: {
-            clientId: process.env.FACEBOOK_CLIENT_ID,
-            clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-          },
-        }
-      : {}),
   },
   user: {
     additionalFields: {

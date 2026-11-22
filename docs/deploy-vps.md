@@ -24,4 +24,4 @@ It pulls, installs, runs the unit tests, applies database migrations, builds, re
 
 - Paystack and Flutterwave webhooks: `https://anlimacarrental.com/api/webhooks/paystack` and `/api/webhooks/flutterwave`.
 - Resend: verify `anlimacarrental.com` under Domains by adding the DNS records Resend shows.
-- Google or Facebook sign-in, if used: callback `https://anlimacarrental.com/api/auth/callback/google` (or `/facebook`).
+- Google sign-in, if used: callback `https://anlimacarrental.com/api/auth/callback/google`.
