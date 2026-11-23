@@ -10,6 +10,7 @@ import { isStaffRole } from "@/lib/auth-redirect";
 import { FavouriteButton } from "@/components/favourites";
 import { VehicleImage } from "@/components/vehicle-image";
 import { money } from "@/lib/catalogue";
+import { documentSummary, documentsReady } from "@/lib/documents";
 import { privatePage, publicPage } from "@/lib/seo";
 import { Users, SteeringWheel, GasPump, ArrowLeft } from "@/components/icons";
 export const dynamic = "force-dynamic";
@@ -43,6 +44,19 @@ export default async function Detail({
   const car = await db.vehicle.findUnique({ where: { slug } });
   if (!car) notFound();
   const current = await session();
+  const documents = current
+    ? (
+        await db.customerDocument.findMany({
+          where: { userId: current.user.id },
+          select: { id: true, kind: true, status: true, rejectionReason: true },
+        })
+      ).map((d) => ({
+        id: d.id,
+        kind: d.kind,
+        status: d.status,
+        reason: d.rejectionReason,
+      }))
+    : [];
   if (isStaffRole(current?.user.role)) redirect("/admin/fleet");
   return (
     <>
@@ -111,6 +125,8 @@ export default async function Detail({
                 withDriverRate: car.withDriverRate,
               }}
               initial={q}
+              documents={documents}
+              documentsReady={documentsReady(documentSummary(documents))}
               user={
                 current
                   ? {

@@ -86,3 +86,20 @@ test("summarises licence and Ghana Card status from both sides", async () => {
     { licence: "PENDING", id: "REJECTED" },
   );
 });
+test("self-drive needs both sides of both documents, not rejected", async () => {
+  const { documentSummary, documentsReady } = await import(
+    "../src/lib/documents"
+  );
+  const all = (status: string) =>
+    ["LICENCE_FRONT", "LICENCE_BACK", "ID_FRONT", "ID_BACK"].map((kind) => ({
+      kind,
+      status,
+    }));
+  assert.ok(documentsReady(documentSummary(all("PENDING"))));
+  assert.ok(documentsReady(documentSummary(all("APPROVED"))));
+  assert.ok(!documentsReady(documentSummary([])));
+  assert.ok(!documentsReady(documentSummary(all("PENDING").slice(1))));
+  const rejected = all("APPROVED");
+  rejected[2].status = "REJECTED";
+  assert.ok(!documentsReady(documentSummary(rejected)));
+});

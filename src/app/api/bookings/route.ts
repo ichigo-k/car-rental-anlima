@@ -16,6 +16,11 @@ import {
   RESERVATION_HOLD_MINUTES,
 } from "@/lib/reservation";
 import { encryptIdentity } from "@/lib/identity";
+import {
+  documentSummary,
+  documentsReady,
+  DOCUMENTS_NEEDED,
+} from "@/lib/documents";
 import { promotionQuote, CouponError } from "@/lib/promotions";
 export async function POST(req: Request) {
   if (
@@ -76,6 +81,18 @@ export async function POST(req: Request) {
   const windowIssue = bookingWindowIssue(pickup, returnAt);
   if (windowIssue)
     return NextResponse.json({ error: windowIssue }, { status: 400 });
+  if (
+    !v.withDriver &&
+    !documentsReady(
+      documentSummary(
+        await db.customerDocument.findMany({
+          where: { userId: current.user.id },
+          select: { kind: true, status: true },
+        }),
+      ),
+    )
+  )
+    return NextResponse.json({ error: DOCUMENTS_NEEDED }, { status: 400 });
   if (!v.withDriver && !licenceValidThrough(v.licenceExpiry!, returnAt))
     return NextResponse.json(
       {

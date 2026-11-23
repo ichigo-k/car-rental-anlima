@@ -174,3 +174,14 @@ export function documentSummary(
     id: of("ID_FRONT", "ID_BACK"),
   };
 }
+
+// Self-drive customers must upload both sides of their licence and Ghana Card
+// before paying. Uploads awaiting review count; staff approve them before
+// handover. A rejected side must be replaced first.
+export const DOCUMENTS_NEEDED =
+  "Upload both sides of your driving licence and Ghana Card before paying. Staff check them before pickup.";
+export function documentsReady(summary: DocumentSummary) {
+  return [summary.licence, summary.id].every(
+    (s) => s === "APPROVED" || s === "PENDING",
+  );
+}

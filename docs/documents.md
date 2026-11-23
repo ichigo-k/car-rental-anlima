@@ -7,7 +7,8 @@ Customers upload both sides of their driving licence and Ghana Card at **My docu
 - Photos (resized on the phone first, which also removes location data) or PDFs up to 8 MB. The type is checked from the file's content.
 - One current copy of each side: uploading again replaces it, and the old file is deleted at once.
 - Customers can view or delete their documents at any time. Their bookings page reminds them before pickup if anything is missing, incomplete or not accepted.
-- Documents do not block booking: staff still check the originals at pickup. Requiring approved documents before booking would be a small change if ANLIMA wants it.
+- Self-drive bookings need both sides of the licence and Ghana Card before paying. The booking form's Driver step has the uploads, and the server refuses the reservation, and payment, without them (`documentsReady`). Uploads awaiting review count; a rejected side must be replaced. Bookings with an ANLIMA driver do not need them.
+- Staff approve the documents before handover and still check the originals at pickup.
 
 ## For staff
 

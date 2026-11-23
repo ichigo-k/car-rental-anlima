@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Stepper, { Step } from "./stepper/Stepper";
+import { DocumentUpload } from "./document-upload";
 import { money } from "@/lib/catalogue";
 import { displayPhone } from "@/lib/phone";
 import { bookingWindowIssue, quote, type QuoteItem } from "@/lib/pricing";
@@ -30,14 +31,32 @@ type Customer = {
   emailVerified: boolean;
   phone: string | null;
 };
+// Self-drive customers upload their licence and Ghana Card in the Driver
+// step; the server refuses the reservation without them.
+const DOCUMENT_LABELS = {
+  LICENCE_FRONT: "Driving licence (front)",
+  LICENCE_BACK: "Driving licence (back)",
+  ID_FRONT: "Ghana Card (front)",
+  ID_BACK: "Ghana Card (back)",
+};
+type CustomerDocument = {
+  id: string;
+  kind: string;
+  status: string;
+  reason: string | null;
+};
 export function BookingForm({
   car,
   initial,
   user,
+  documents = [],
+  documentsReady = false,
 }: {
   car: BookingCar;
   initial: Record<string, string | undefined>;
   user: Customer | null;
+  documents?: CustomerDocument[];
+  documentsReady?: boolean;
 }) {
   const router = useRouter();
   const form = useRef<HTMLFormElement>(null);
@@ -313,6 +332,12 @@ export function BookingForm({
       !licenceValidThrough(values.licenceExpiry, new Date(values.returnAt))
     ) {
       setError("Your licence must remain valid throughout the rental.");
+      return false;
+    }
+    if (step === 3 && !values.withDriver && !documentsReady) {
+      setError(
+        "Upload both sides of your driving licence and Ghana Card to continue. Replace any that were not accepted.",
+      );
       return false;
     }
     if (step === 4 && !values.terms) {
@@ -656,6 +681,26 @@ export function BookingForm({
                   Your licence must be valid until the end of your rental. Staff
                   check original documents at handover.
                 </p>
+                <h3>Upload your documents</h3>
+                <p className="muted">
+                  Clear photos or PDFs of both sides of your driving licence and
+                  Ghana Card. These are needed before you pay, and you only
+                  upload them once.
+                </p>
+                <div className="document-grid booking-documents">
+                  {(
+                    Object.keys(
+                      DOCUMENT_LABELS,
+                    ) as (keyof typeof DOCUMENT_LABELS)[]
+                  ).map((kind) => (
+                    <DocumentUpload
+                      key={kind}
+                      kind={kind}
+                      label={DOCUMENT_LABELS[kind]}
+                      doc={documents.find((d) => d.kind === kind) ?? null}
+                    />
+                  ))}
+                </div>
                 {values.extraDriver && (
                   <>
                     <h3>Additional driver</h3>
