@@ -33,16 +33,13 @@ Open [localhost:3000](http://localhost:3000). To add the four sample cars, run `
 
 ## Accounts and admin access
 
-Email and password sign-in works without any OAuth keys. Google and Facebook are optional; add their credentials from `.env.example` to enable them. Their callback URLs are:
+Email and password sign-in works without any OAuth keys. Google sign-in is optional; add its credentials from `.env.example` to enable it, and register the callback `/api/auth/callback/google` on your app's domain in Google Cloud.
 
-- `/api/auth/callback/google`
-- `/api/auth/callback/facebook`
+New accounts have the `CUSTOMER` role. To create the first administrator, sign up with email and password, open `npm exec prisma studio`, and change that user's role to `ADMIN`. After that, administrators add and manage staff at `/admin/staff`; the roles are `ADMIN`, `MANAGER`, `AGENT`, `FLEET` and `FINANCE`. Each role's permissions are listed in `src/lib/permissions.ts` and checked on the server.
 
-Register those paths on your app's domain in each provider's dashboard.
+Staff must use two-step sign-in. On their first sign-in they are sent to `/staff-security` to link an authenticator app and save backup codes; every later sign-in asks for a code. Staff accounts cannot use Google sign-in. If someone loses their phone, an administrator can reset their two-step sign-in from `/admin/staff`.
 
-New accounts have the `CUSTOMER` role. To create an admin, sign up normally, open `npm exec prisma studio`, and change that user's role to `ADMIN`. Other staff roles are `MANAGER`, `AGENT`, `FLEET` and `FINANCE`. Sign in again after changing a role.
-
-Staff sign-in goes to `/admin`; customers return to their booking or account page. Staff access is checked on the server.
+Staff sign-in goes to `/admin`; customers return to their booking or account page.
 
 ## Reservations and payments
 
@@ -50,7 +47,7 @@ A reservation holds a car for 15 minutes. The customer chooses one of that car's
 
 Payment options stay disabled until their keys are configured. Start with test keys. The [payment setup guide](docs/payments.md) covers the environment variables, webhooks and test flow for both providers.
 
-Late payments and duplicate charges go to staff review. Refunds are handled in the payment provider's dashboard.
+Late payments and duplicate charges go to staff review. Finance staff refund payments from `/admin/payments`; the money goes back through Paystack or Flutterwave (see `docs/refunds.md`).
 
 Promotions can apply automatically or use a coupon code. They can cover the whole fleet or selected cars. Discounts apply to the rental charge, not the refundable deposit.
 
@@ -62,19 +59,24 @@ npm run typecheck
 npm run build
 ```
 
-The integration tests use temporary records in your configured database and remove them afterwards:
+The integration tests use temporary records in your configured database and remove them afterwards. They create accounts and bookings, which queue emails and texts, so start the app with `npm run dev:test` rather than `npm run dev`: it sends every email and SMS to a dead local address. The tests refuse to run against a normal dev server when real email or SMS keys are set.
 
 | Command | Covers | App running? |
 | --- | --- | --- |
-| `npm run test:integration` | Accounts, reservations and staff operations | Yes |
-| `npm run test:promotions` | Offers, coupon limits and saved prices | Yes |
-| `npm run test:contact` | Enquiries and access controls | Yes |
-| `npm run test:payments` | Checkout, webhooks and payment verification | No |
+| `npm run test:integration` | Accounts, reservations, booking changes and staff operations | Yes, with `npm run dev:test` |
+| `npm run test:promotions` | Offers, coupon limits and saved prices | Yes, with `npm run dev:test` |
+| `npm run test:contact` | Enquiries and access controls | Yes, with `npm run dev:test` |
+| `npm run test:payments` | Checkout, webhooks, payment verification and refunds | No |
+| `npm run test:monitoring` | Error grouping, alerts and health checks | No |
+| `npm run test:geofences` | Geofence crossings and alerts | No |
+| `npm run test:site-analytics` | Website visit counting and figures | No |
+| `npm run test:notifications` | Message queue, retries and provider formats | No; stop the app first, because a running app also works through the shared message queue |
+| `npm run test:gps`, `npm run test:assistant` | Tracksolid client, chat assistant | No |
 
 The payment tests mock provider responses. They do not charge a card or Mobile Money wallet. Testing actual hosted checkout needs provider test keys and a public webhook URL.
 
 ## Current limits
 
-The sample fleet and contact placeholders need replacing with ANLIMA's actual details. GPS tracking is simulated. Refunds and customer notifications are not automated, and the rental terms are still a draft.
+The Contact page still shows placeholders for ANLIMA's phone, email and address. The rental terms and privacy notice need ANLIMA's approval. Monitoring and backups need a few one-off steps (`docs/monitoring.md`, `docs/backups.md`).
 
 Keep `.env` out of Git. Set a stable `IDENTITY_ENCRYPTION_SECRET` before storing real Ghana Card records; changing encryption secrets later requires migrating those records. Use an HTTPS `BETTER_AUTH_URL` when deploying.

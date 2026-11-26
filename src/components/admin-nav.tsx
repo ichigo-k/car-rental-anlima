@@ -10,6 +10,8 @@ import {
   Users,
   ClockCounterClockwise,
   ArrowUpRight,
+  GearSix,
+  ChartLineUp,
 } from "@phosphor-icons/react";
 const icons = [
   SquaresFour,
@@ -20,6 +22,8 @@ const icons = [
   Users,
   ClockCounterClockwise,
   ArrowUpRight,
+  GearSix,
+  ChartLineUp,
 ];
 export function AdminNav({
   links,

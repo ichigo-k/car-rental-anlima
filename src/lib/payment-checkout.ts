@@ -8,6 +8,7 @@ import {
   providerName,
 } from "./payment-options";
 import { blockingWhere, overlaps } from "./pricing";
+import { documentSummary, documentsReady, DOCUMENTS_NEEDED } from "./documents";
 export class CheckoutError extends Error {
   constructor(
     message: string,
@@ -43,6 +44,20 @@ export async function startCheckout(
         "This reservation is no longer awaiting payment. Check your bookings before trying again.",
         409,
       );
+    // Covers reservations made before uploads were required, and documents
+    // deleted or rejected since.
+    if (
+      !booking.withDriver &&
+      !documentsReady(
+        documentSummary(
+          await tx.customerDocument.findMany({
+            where: { userId: booking.userId },
+            select: { kind: true, status: true },
+          }),
+        ),
+      )
+    )
+      throw new CheckoutError(DOCUMENTS_NEEDED, 409);
     const car = await tx.vehicle.findUniqueOrThrow({
       where: { id: booking.vehicleId },
     });

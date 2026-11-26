@@ -23,18 +23,37 @@ datasource db {
 }
 
 model User {
-  id            String      @id
-  name          String
-  email         String      @unique
-  emailVerified Boolean     @default(false)
-  image         String?
-  role          String      @default("CUSTOMER")
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  sessions      Session[]
-  accounts      Account[]
-  bookings      Booking[]
-  favourites    Favourite[]
+  id                  String      @id
+  name                String
+  email               String      @unique
+  emailVerified       Boolean     @default(false)
+  image               String?
+  role                String      @default("CUSTOMER")
+  twoFactorEnabled    Boolean     @default(false)
+  phoneNumber         String?     @unique
+  phoneNumberVerified Boolean     @default(false)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  sessions            Session[]
+  accounts            Account[]
+  bookings            Booking[]
+  favourites          Favourite[]
+  twoFactors          TwoFactor[]
+  documents           CustomerDocument[]
+}
+
+model TwoFactor {
+  id                      String    @id
+  secret                  String
+  backupCodes             String
+  userId                  String
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified                Boolean   @default(true)
+  failedVerificationCount Int       @default(0)
+  lockedUntil             DateTime?
+
+  @@index([secret])
+  @@index([userId])
 }
 
 model Session {
@@ -76,23 +95,31 @@ model Verification {
 }
 
 model Vehicle {
-  id           String         @id @default(cuid())
-  slug         String         @unique
-  name         String
-  category     String
-  seats        Int
-  transmission String         @default("Automatic")
-  fuel         String         @default("Petrol")
-  dailyRate    Int
-  deposit      Int            @default(150000)
-  image        String
-  description  String
-  status       String         @default("AVAILABLE")
-  bookings     Booking[]
-  blocks       VehicleBlock[]
-  pickupPoints String[]       @default(["Accra · Airport pickup", "Accra · City pickup"])
-  favourites   Favourite[]
-  createdAt    DateTime       @default(now())
+  id               String         @id @default(cuid())
+  slug             String         @unique
+  name             String
+  category         String
+  seats            Int
+  transmission     String         @default("Automatic")
+  fuel             String         @default("Petrol")
+  dailyRate        Int
+  deposit          Int            @default(150000)
+  image            String
+  description      String
+  status           String         @default("AVAILABLE")
+  bookings         Booking[]
+  blocks           VehicleBlock[]
+  pickupPoints     String[]       @default(["Accra · Airport pickup", "Accra · City pickup"])
+  gpsImei          String?        @unique
+  // SELF_DRIVE, BOTH (self-drive or with an ANLIMA driver) or CHAUFFEUR_ONLY.
+  driverOption     String         @default("SELF_DRIVE")
+  // Daily rate when booked with a driver; required unless SELF_DRIVE.
+  withDriverRate   Int?
+  // Per-car mileage rules; empty means the Fees & settings defaults apply.
+  dailyKmAllowance Int?
+  excessKmFee      Int?
+  favourites       Favourite[]
+  createdAt        DateTime       @default(now())
 }
 
 model Favourite {
@@ -116,12 +143,12 @@ model VehicleBlock {
 }
 
 model Booking {
-  id                 String       @id @default(cuid())
-  reference          String       @unique
+  id                 String          @id @default(cuid())
+  reference          String          @unique
   userId             String
-  user               User         @relation(fields: [userId], references: [id])
+  user               User            @relation(fields: [userId], references: [id])
   vehicleId          String
-  vehicle            Vehicle      @relation(fields: [vehicleId], references: [id])
+  vehicle            Vehicle         @relation(fields: [vehicleId], references: [id])
   pickup             DateTime
   returnAt           DateTime
   location           String
@@ -130,25 +157,44 @@ model Booking {
   customerEmail      String?
   ghanaCardEncrypted String?
   ghanaCardLast4     String?
-  licenceNumber      String
-  licenceExpiry      DateTime
-  status             String       @default("PENDING_PAYMENT")
+  licenceNumber      String?
+  licenceExpiry      DateTime?
+  status             String          @default("PENDING_PAYMENT")
   days               Int
   dailyRate          Int
   rentalAmount       Int
   deposit            Int
   total              Int
-  discountAmount     Int          @default(0)
+  discountAmount     Int             @default(0)
   promotionId        String?
-  promotion          Promotion?   @relation(fields: [promotionId], references: [id], onDelete: SetNull)
+  promotion          Promotion?      @relation(fields: [promotionId], references: [id], onDelete: SetNull)
   promotionName      String?
   couponCode         String?
   termsVersion       String
   termsAcceptedAt    DateTime
   holdExpiresAt      DateTime
-  createdAt          DateTime     @default(now())
+  cancelledAt        DateTime?
+  cancellationReason String?
+  cancelRequestedAt  DateTime?
+  returnedAt         DateTime?
+  closedAt           DateTime?
+  depositApplied     Int?
+  withDriver         Boolean         @default(false)
+  durationDiscount   Int             @default(0)
+  extrasAmount       Int             @default(0)
+  deliveryAddress    String?
+  extraDriverName    String?
+  extraDriverLicence String?
+  createdAt          DateTime        @default(now())
   payments           Payment[]
   inspections        Inspection[]
+  charges            BookingCharge[]
+  notifications      Notification[]
+  review             Review?
+  items              BookingItem[]
+  changes            BookingChange[]
+  photos             InspectionPhoto[]
+  refunds            Refund[]
 
   @@index([vehicleId, pickup, returnAt])
   @@index([promotionId])
@@ -180,6 +226,173 @@ model Payment {
   provider   String    @default("PAYSTACK")
   verifiedAt DateTime?
   createdAt  DateTime  @default(now())
+  refunds    Refund[]
+}
+
+// Money sent back through the payment provider (Guide §5), kept separate from
+// the original payment, which is never changed. REQUESTED: recorded, request
+// in flight. PENDING: accepted by the provider. PROCESSED: completed. FAILED:
+// not sent. UNKNOWN: the provider's answer was lost; staff must check the
+// provider before the payment can be refunded again.
+model Refund {
+  id               String    @id @default(cuid())
+  paymentId        String
+  payment          Payment   @relation(fields: [paymentId], references: [id])
+  bookingId        String
+  booking          Booking   @relation(fields: [bookingId], references: [id])
+  amount           Int
+  reason           String
+  status           String    @default("REQUESTED")
+  providerRefundId String?
+  providerStatus   String?
+  lastError        String?
+  requestedBy      String
+  processedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([paymentId])
+  @@index([bookingId])
+  @@index([status])
+}
+
+// One review per returned rental. Customers write it; staff approve, hide
+// and choose which appear on the website, but never edit the words.
+model Review {
+  id          String    @id @default(cuid())
+  bookingId   String    @unique
+  booking     Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  userId      String
+  rating      Int
+  body        String
+  displayName String
+  status      String    @default("PENDING")
+  featured    Boolean   @default(false)
+  sortOrder   Int       @default(0)
+  decidedBy   String?
+  decidedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([status, featured, sortOrder])
+}
+
+// Outbox for email (Resend) and SMS (SMSOnlineGH). Rows are written in the
+// same transaction as the event; delivery happens afterwards and never undoes it.
+model Notification {
+  id            String    @id @default(cuid())
+  dedupeKey     String    @unique
+  bookingId     String?
+  booking       Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  template      String
+  channel       String
+  recipient     String
+  subject       String?
+  body          String
+  status        String    @default("QUEUED")
+  attempts      Int       @default(0)
+  nextAttemptAt DateTime  @default(now())
+  lastError     String?
+  providerId    String?
+  sentAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([status, nextAttemptAt])
+  @@index([bookingId])
+}
+
+// One row per chatbot request, for rate limiting. Only a keyed hash of the
+// visitor is stored, never the conversation.
+model AssistantRequest {
+  id          String   @id @default(cuid())
+  fingerprint String
+  createdAt   DateTime @default(now())
+
+  @@index([fingerprint, createdAt])
+  @@index([createdAt])
+}
+
+// Short-lived provider state, such as the cached Tracksolid access token.
+model IntegrationState {
+  key       String    @id
+  value     String
+  expiresAt DateTime?
+  updatedAt DateTime  @updatedAt
+}
+
+// Single row (id "default") of fees set by ANLIMA in the admin dashboard.
+// Amounts are pesewas; every change is recorded in AuditEvent.
+model FeeSettings {
+  id                      String   @id @default("default")
+  lateGraceMinutes        Int      @default(60)
+  lateHourPercent         Int      @default(10)
+  discount3Days           Int      @default(5)
+  discount7Days           Int      @default(10)
+  discount14Days          Int      @default(15)
+  discount30Days          Int      @default(20)
+  deliveryFee             Int      @default(15000)
+  extraDriverFee          Int      @default(10000)
+  driverOvertimeHourly    Int      @default(5000)
+  fuelPerQuarter          Int      @default(0)
+  cleaningFee             Int      @default(0)
+  smokingFee              Int      @default(0)
+  dailyKmAllowance        Int?
+  excessKmFee             Int      @default(0)
+  freeCancellationHours   Int      @default(48)
+  lateCancellationPercent Int      @default(0)
+  updatedAt               DateTime @updatedAt
+  updatedBy               String?
+}
+
+// The itemised quote saved with each booking (Guide FR-005), so historic
+// totals never change when prices are edited.
+model BookingItem {
+  id        String  @id @default(cuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  kind      String
+  label     String
+  amount    Int
+
+  @@index([bookingId])
+}
+
+model BookingCharge {
+  id         String    @id @default(cuid())
+  bookingId  String
+  booking    Booking   @relation(fields: [bookingId], references: [id])
+  kind       String
+  amount     Int
+  reason     String
+  evidence   String?
+  status     String    @default("PROPOSED")
+  proposedBy String
+  decidedBy  String?
+  decidedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([bookingId])
+}
+
+// A staff change to a booking's car or dates (Guide AC-05). The amount paid
+// is never rewritten; priceDifference is the rental price of the new
+// arrangement minus the old one (negative: a credit owed to the customer).
+model BookingChange {
+  id              String   @id @default(cuid())
+  bookingId       String
+  booking         Booking  @relation(fields: [bookingId], references: [id])
+  fromVehicleId   String
+  toVehicleId     String
+  fromPickup      DateTime
+  toPickup        DateTime
+  fromReturn      DateTime
+  toReturn        DateTime
+  priceDifference Int
+  chargeId        String?
+  reason          String
+  changedBy       String
+  createdAt       DateTime @default(now())
+
+  @@index([bookingId])
 }
 
 model Inspection {
@@ -193,6 +406,30 @@ model Inspection {
   acknowledgement String
   recordedBy      String
   createdAt       DateTime @default(now())
+  photos          InspectionPhoto[]
+}
+
+// A handover or return photo (Guide §7). Files live on the server's disk
+// (UPLOAD_DIR), never in a public folder. A photo is uploaded first and joins
+// its inspection when the inspection is saved; unattached ones are removed
+// after a day.
+model InspectionPhoto {
+  id           String      @id @default(cuid())
+  bookingId    String
+  booking      Booking     @relation(fields: [bookingId], references: [id])
+  inspectionId String?
+  inspection   Inspection? @relation(fields: [inspectionId], references: [id])
+  kind         String
+  storageKey   String      @unique
+  contentType  String
+  size         Int
+  sha256       String
+  takenAt      DateTime?
+  uploadedBy   String
+  createdAt    DateTime    @default(now())
+
+  @@index([bookingId])
+  @@index([inspectionId])
 }
 
 model AuditEvent {
@@ -202,4 +439,118 @@ model AuditEvent {
   entityId  String
   detail    String
   createdAt DateTime @default(now())
+}
+
+// Server errors, grouped so a repeated error counts up instead of flooding
+// the operations inbox (Guide FR-023). No request headers or query strings
+// are stored.
+model ErrorEvent {
+  id          String    @id @default(cuid())
+  fingerprint String    @unique
+  message     String
+  digest      String?
+  path        String
+  method      String
+  routeType   String?
+  count       Int       @default(1)
+  firstSeen   DateTime  @default(now())
+  lastSeen    DateTime  @default(now())
+  alertedAt   DateTime?
+
+  @@index([lastSeen])
+}
+
+// A customer's driving licence or Ghana Card scan (Guide §5, "approved
+// document upload"). Files are encrypted on disk (UPLOAD_DIR/documents); only
+// the customer and authorised staff can open them, and staff views are logged.
+// One current document per kind: uploading again replaces it.
+model CustomerDocument {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind            String
+  storageKey      String    @unique
+  contentType     String
+  size            Int
+  sha256          String
+  status          String    @default("PENDING")
+  rejectionReason String?
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@unique([userId, kind])
+  @@index([status])
+}
+
+// An area set by staff on the tracking map (Guide FR-020). ALLOWED: alert when
+// a car leaves it. RESTRICTED: alert when a car enters it. A circle uses the
+// centre and radius; a polygon uses points ([[lat, lng], ...]). Empty
+// vehicleIds means every tracked car. ON_RENTAL fences apply only while a car
+// is out on a rental.
+model Geofence {
+  id          String          @id @default(cuid())
+  name        String
+  kind        String
+  shape       String
+  centerLat   Float?
+  centerLng   Float?
+  radiusM     Int?
+  points      Json?
+  vehicleIds  String[]        @default([])
+  appliesWhen String          @default("ALWAYS")
+  active      Boolean         @default(true)
+  createdBy   String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  states      GeofenceState[]
+  events      GeofenceEvent[]
+}
+
+// Whether each car was last seen inside each fence, to detect crossings.
+model GeofenceState {
+  geofenceId String
+  geofence   Geofence @relation(fields: [geofenceId], references: [id], onDelete: Cascade)
+  vehicleId  String
+  inside     Boolean
+  updatedAt  DateTime @updatedAt
+
+  @@id([geofenceId, vehicleId])
+}
+
+// A car leaving an allowed area or entering a restricted one.
+model GeofenceEvent {
+  id             String    @id @default(cuid())
+  geofenceId     String
+  geofence       Geofence  @relation(fields: [geofenceId], references: [id], onDelete: Cascade)
+  vehicleId      String
+  bookingId      String?
+  type           String
+  latitude       Float
+  longitude      Float
+  at             DateTime
+  acknowledgedBy String?
+  acknowledgedAt DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([acknowledgedAt])
+  @@index([createdAt])
+}
+
+// First-party website analytics (Guide §10): page views of public pages and
+// booking-funnel events. No cookies, IP addresses or personal data: `visitor`
+// is a code that changes every day, so a person cannot be identified or
+// followed across days. Kept for 13 months.
+model SiteEvent {
+  id           String   @id @default(cuid())
+  at           DateTime @default(now())
+  type         String
+  path         String
+  referrerHost String?
+  device       String
+  visitor      String
+  data         Json?
+
+  @@index([at])
+  @@index([type, at])
 }

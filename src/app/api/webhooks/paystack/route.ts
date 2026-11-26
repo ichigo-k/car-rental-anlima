@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { verifyPayment } from "@/lib/paystack";
 import { validPaystackSignature } from "@/lib/payment-webhooks";
 import { db } from "@/lib/db";
+import { refreshPendingRefunds } from "@/lib/refunds";
 export async function POST(req: Request) {
   const key = process.env.PAYSTACK_SECRET_KEY;
   if (!key)
@@ -37,6 +38,10 @@ export async function POST(req: Request) {
       const payment = await db.payment.findUnique({ where: { reference } });
       if (payment?.provider === "PAYSTACK") await verifyPayment(reference);
     }
+    // Refund events only prompt a status check with Paystack; the event's
+    // own fields are not trusted for the outcome.
+    if (typeof event.event === "string" && event.event.startsWith("refund."))
+      await refreshPendingRefunds("PAYSTACK");
     return NextResponse.json({ received: true });
   } catch {
     return NextResponse.json(

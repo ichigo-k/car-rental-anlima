@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Header, Footer } from "@/components/header";
+import { TrackOnView } from "@/components/analytics";
 import { BookingForm } from "@/components/booking-form";
 import { db } from "@/lib/db";
 import { session } from "@/lib/auth";
@@ -8,8 +10,28 @@ import { isStaffRole } from "@/lib/auth-redirect";
 import { FavouriteButton } from "@/components/favourites";
 import { VehicleImage } from "@/components/vehicle-image";
 import { money } from "@/lib/catalogue";
+import { documentSummary, documentsReady } from "@/lib/documents";
+import { privatePage, publicPage } from "@/lib/seo";
 import { Users, SteeringWheel, GasPump, ArrowLeft } from "@/components/icons";
 export const dynamic = "force-dynamic";
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const car = await db.vehicle.findUnique({ where: { slug } });
+  if (!car || car.status === "INACTIVE") return privatePage();
+  return publicPage(
+    `${car.name} Rental in Accra`,
+    `Rent the ${car.name} in Accra from ${money(car.dailyRate)} a day. ${car.description}`.slice(
+      0,
+      300,
+    ),
+    `/fleet/${car.slug}`,
+    car.image,
+  );
+}
 export default async function Detail({
   params,
   searchParams,
@@ -22,10 +44,27 @@ export default async function Detail({
   const car = await db.vehicle.findUnique({ where: { slug } });
   if (!car) notFound();
   const current = await session();
+  const documents = current
+    ? (
+        await db.customerDocument.findMany({
+          where: { userId: current.user.id },
+          select: { id: true, kind: true, status: true, rejectionReason: true },
+        })
+      ).map((d) => ({
+        id: d.id,
+        kind: d.kind,
+        status: d.status,
+        reason: d.rejectionReason,
+      }))
+    : [];
   if (isStaffRole(current?.user.role)) redirect("/admin/fleet");
   return (
     <>
       <Header active="Cars" />
+      <TrackOnView
+        name="car-viewed"
+        data={{ car: car.slug, category: car.category }}
+      />
       <main className="section reservation-page">
         <Link href="/fleet" className="text-link">
           <ArrowLeft /> Back to the fleet
@@ -82,11 +121,22 @@ export default async function Detail({
                 deposit: car.deposit,
                 pickupPoints: car.pickupPoints,
                 status: car.status,
+                driverOption: car.driverOption,
+                withDriverRate: car.withDriverRate,
               }}
               initial={q}
+              documents={documents}
+              documentsReady={documentsReady(documentSummary(documents))}
               user={
                 current
-                  ? { name: current.user.name, email: current.user.email }
+                  ? {
+                      name: current.user.name,
+                      email: current.user.email,
+                      emailVerified: current.user.emailVerified,
+                      phone: current.user.phoneNumberVerified
+                        ? (current.user.phoneNumber ?? null)
+                        : null,
+                    }
                   : null
               }
             />

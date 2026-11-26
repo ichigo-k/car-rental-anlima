@@ -3,7 +3,13 @@ import Image from "next/image";
 import { Footer } from "@/components/header";
 import { MarketingHero, MarketingCta } from "@/components/anlima-pages";
 import { SectionHeading } from "@/components/marketing-sections";
-export const metadata: Metadata = { title: "How It Works" };
+import { StartTourButton } from "@/components/booking-tour";
+import { publicPage } from "@/lib/seo";
+export const metadata: Metadata = publicPage(
+  "How It Works",
+  "How to rent a car with ANLIMA in Accra: choose a car and dates, confirm your details, pay securely online and collect your car.",
+  "/how-it-works",
+);
 const steps = [
   [
     "Find Your Perfect Ride",
@@ -38,6 +44,11 @@ export default function HowItWorksPage() {
               From choosing your car to hitting the road, our simple booking
               process makes getting started quick and convenient.
             </SectionHeading>
+            <p className="tour-cta">
+              <StartTourButton className="button">
+                Show me on the website: take the guided tour
+              </StartTourButton>
+            </p>
             <ol>
               {steps.map(([title, copy, image, alt], i) => (
                 <li key={title}>

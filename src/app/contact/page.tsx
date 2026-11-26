@@ -3,7 +3,12 @@ import Image from "next/image";
 import { Footer } from "@/components/header";
 import { MarketingHero, MarketingCta } from "@/components/anlima-pages";
 import { ContactForm } from "@/components/contact-form";
-export const metadata: Metadata = { title: "Contact Us" };
+import { publicPage } from "@/lib/seo";
+export const metadata: Metadata = publicPage(
+  "Contact Us",
+  "Contact ANLIMA Car Rental about a booking, a car or a longer rental in Accra.",
+  "/contact",
+);
 export default function ContactPage() {
   return (
     <>

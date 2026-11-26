@@ -223,6 +223,35 @@ export function PromotionEditor({
           >
             Cancel
           </button>
+          {promotion && (
+            <button
+              type="button"
+              className="text-link danger"
+              disabled={busy}
+              onClick={async () => {
+                if (
+                  !window.confirm(
+                    `Delete "${promotion.name}" for good? Customers can no longer use it. Bookings that already used it keep their discount.`,
+                  )
+                )
+                  return;
+                setBusy(true);
+                setError("");
+                const r = await fetch(`/api/admin/promotions/${promotion.id}`, {
+                  method: "DELETE",
+                }).catch(() => null);
+                setBusy(false);
+                if (!r?.ok) {
+                  setError("Could not delete this promotion.");
+                  return;
+                }
+                setOpen(false);
+                router.refresh();
+              }}
+            >
+              Delete promotion
+            </button>
+          )}
         </div>
         {error && (
           <p className="error wide-field" role="alert">

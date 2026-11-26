@@ -4,7 +4,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { session } from "@/lib/auth";
 import { accountDestination } from "@/lib/auth-redirect";
+import type { Metadata } from "next";
+import { privatePage } from "@/lib/seo";
 
+export const metadata: Metadata = privatePage("Sign in");
 export const dynamic = "force-dynamic";
 
 export default async function SignIn({
@@ -84,15 +87,11 @@ export default async function SignIn({
           )}
 
           <SignInForm
-            providers={{
-              google: !!(
+            google={
+              !!(
                 process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-              ),
-              facebook: !!(
-                process.env.FACEBOOK_CLIENT_ID &&
-                process.env.FACEBOOK_CLIENT_SECRET
-              ),
-            }}
+              )
+            }
           />
 
           <p className="auth-legal">

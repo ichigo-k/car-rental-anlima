@@ -7,10 +7,20 @@ import { SearchForm } from "@/components/search-form";
 import { VehicleCard } from "@/components/vehicle-card";
 import {
   Faq,
+  RentalSteps,
   RoadBanner,
   SectionHeading,
 } from "@/components/marketing-sections";
 import { db } from "@/lib/db";
+import { Testimonials } from "@/components/testimonials";
+import { publicReviews } from "@/lib/reviews";
+import type { Metadata } from "next";
+import { publicPage } from "@/lib/seo";
+export const metadata: Metadata = publicPage(
+  undefined,
+  "Rent a car in Accra with ANLIMA. Compare saloons, SUVs, pickups and executive cars, see the full price up front and book online with secure payment.",
+  "/",
+);
 export const dynamic = "force-dynamic";
 const heroFont = Poppins({
   subsets: ["latin"],
@@ -18,6 +28,7 @@ const heroFont = Poppins({
   display: "swap",
 });
 export default async function Home() {
+  const reviews = await publicReviews(db);
   const fleet = await db.vehicle.findMany({
     where: { status: "AVAILABLE" },
     orderBy: { dailyRate: "asc" },
@@ -29,14 +40,16 @@ export default async function Home() {
         <section
           className={`design-hero home-hero restored-hero ${heroFont.className}`}
         >
-          <Image
-            className="design-hero-photo"
-            src="/images/figma/home-imgEnhanceThisImage2K20261006134800Photoroom1.png"
-            alt="Silver Mercedes SUV on an open road"
-            fill
-            preload
-            sizes="(max-width: 760px) 180vw, 125vw"
-          />
+          <div className="design-hero-media">
+            <Image
+              className="design-hero-photo"
+              src="/images/figma/home-imgEnhanceThisImage2K20261006134800Photoroom1.png"
+              alt="Silver Mercedes SUV on an open road"
+              fill
+              preload
+              sizes="(max-width: 760px) 100vw, 125vw"
+            />
+          </div>
           <Header overlay active="Home" />
           <div className="design-hero-copy">
             <h1>Drive With Confidence.</h1>
@@ -48,7 +61,7 @@ export default async function Home() {
               BOOK A CAR
             </Link>
           </div>
-          <div className="design-hero-search">
+          <div className="design-hero-search" data-tour="search">
             <SearchForm />
           </div>
         </section>
@@ -60,12 +73,12 @@ export default async function Home() {
             Explore our selection of vehicles designed to make every journey
             comfortable, convenient and reliable.
           </SectionHeading>
-          <div className="view-all">
+          <div className="view-all" data-tour="view-all">
             <Link href="/fleet">
               View All Cars <ArrowRight size={16} />
             </Link>
           </div>
-          <div className="fleet-grid">
+          <div className="fleet-grid" data-tour="fleet">
             {fleet.map((car) => (
               <VehicleCard car={car} key={car.id} />
             ))}
@@ -129,7 +142,9 @@ export default async function Home() {
             </div>
           </div>
         </section>
+        <RentalSteps />
         <RoadBanner />
+        <Testimonials reviews={reviews} />
         <Faq />
       </main>
       <Footer />

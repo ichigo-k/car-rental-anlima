@@ -417,7 +417,7 @@
     margin-left: auto;
   }
   .reservation-page .detail-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .reservation-car-photo img {
     height: 320px;
@@ -458,4 +458,492 @@
   .reservation-review > div {
     grid-template-columns: 80px minmax(0, 1fr);
   }
+}
+.cancel-booking {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.cancel-booking p {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 13px;
+}
+.link-button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.auth-card-page {
+  max-width: 560px;
+  margin: 40px auto;
+  padding: 0 16px;
+  display: grid;
+  gap: 20px;
+}
+.auth-card-page .design-brand {
+  width: 170px;
+}
+.auth-card {
+  background: #fff;
+  border: 1px solid #dce5ed;
+  border-radius: 14px;
+  padding: 28px 24px;
+  display: grid;
+  gap: 14px;
+}
+.auth-card h1 {
+  font-size: 26px;
+  margin: 0;
+}
+.verify-steps {
+  display: grid;
+  gap: 14px;
+}
+.verify-step {
+  border: 1px solid #dce5ed;
+  border-radius: 10px;
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+.verify-step h2 {
+  font-size: 16px;
+  margin: 0;
+}
+.verify-step.done {
+  background: #f1faf3;
+  border-color: #bfe3c9;
+}
+.verify-step p {
+  margin: 0;
+}
+.verify-notice {
+  border: 1px solid #ecdfb5;
+  background: #f7edce;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 8px;
+}
+.forgot-link { justify-self: end; font-size: 13px; }
+/* Guided booking tour (driver.js) in ANLIMA colours. */
+.driver-popover.anlima-tour {
+  background: #fff;
+  color: #012d5a;
+  border-radius: 14px;
+  padding: 18px 18px 14px;
+  max-width: 340px;
+  box-shadow: 0 12px 32px rgba(1, 45, 90, 0.25);
+  font-family: inherit;
+}
+.driver-popover.anlima-tour .driver-popover-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #012d5a;
+}
+.driver-popover.anlima-tour .driver-popover-description {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #334155;
+}
+.driver-popover.anlima-tour .driver-popover-progress-text {
+  color: #b18a22;
+  font-weight: 600;
+  font-size: 12px;
+}
+.driver-popover.anlima-tour .driver-popover-footer button {
+  border-radius: 20px;
+  padding: 7px 14px;
+  font-size: 13px;
+  text-shadow: none;
+  border: 1px solid #c5d0e0;
+  background: #fff;
+  color: #012d5a;
+}
+.driver-popover.anlima-tour .driver-popover-next-btn {
+  background: #012d5a;
+  border-color: #012d5a;
+  color: #fff;
+}
+.driver-popover.anlima-tour .driver-popover-arrow-side-bottom {
+  border-bottom-color: #fff;
+}
+.driver-popover.anlima-tour .driver-popover-arrow-side-top {
+  border-top-color: #fff;
+}
+.driver-popover.anlima-tour .driver-popover-arrow-side-left {
+  border-left-color: #fff;
+}
+.driver-popover.anlima-tour .driver-popover-arrow-side-right {
+  border-right-color: #fff;
+}
+/* A gold ring pulses around the button being explained. */
+.driver-active-element {
+  outline: 3px solid #dbb859;
+  outline-offset: 4px;
+  animation: tour-pulse 1.6s ease-in-out infinite;
+}
+@keyframes tour-pulse {
+  0%,
+  100% {
+    outline-color: rgba(219, 184, 89, 1);
+  }
+  50% {
+    outline-color: rgba(219, 184, 89, 0.25);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .driver-active-element {
+    animation: none;
+  }
+}
+.tour-prompt {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 50;
+  max-width: 340px;
+  background: #fff;
+  color: #012d5a;
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(1, 45, 90, 0.25);
+  padding: 16px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 12px;
+  animation: tour-in 0.4s ease-out;
+}
+.tour-prompt-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #dbb859;
+  color: #012d5a;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+}
+.tour-prompt p {
+  margin: 2px 0 0;
+  font-size: 13px;
+}
+.tour-prompt-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.footer-tour {
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+/* Space the tour button like the footer links beside it. */
+.design-footer-grid > div > .footer-tour {
+  display: block;
+  font-size: 14px;
+  font-weight: inherit;
+  margin-bottom: 14px;
+}
+@keyframes tour-in {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour-prompt {
+    animation: none;
+  }
+}
+@media (max-width: 480px) {
+  .tour-prompt {
+    left: 16px;
+    right: 16px;
+    max-width: none;
+  }
+}
+.tour-cta { text-align: center; margin: 10px 0 40px; }
+/* The tour button's label is long; let it wrap on small phones. */
+.tour-cta .button { max-width: 100%; white-space: normal; line-height: 1.3; }
+.review-form {
+  margin-top: 12px;
+}
+.star-input {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 4px;
+}
+.star-input legend {
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.star-input button {
+  border: 0;
+  background: none;
+  font-size: 28px;
+  line-height: 1;
+  color: #c5d0e0;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.star-input button.on {
+  color: #e4b23a;
+}
+.star-input button:focus-visible {
+  outline: 2px solid #012d5a;
+  border-radius: 4px;
+}
+/* Chat assistant */
+.chat-widget {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 60;
+  display: grid;
+  justify-items: end;
+  gap: 12px;
+}
+.chat-launcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 30px;
+  padding: 12px 18px;
+  background: #012d5a;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  box-shadow: 0 10px 24px rgba(1, 45, 90, 0.3);
+  cursor: pointer;
+}
+.chat-panel {
+  width: min(380px, calc(100vw - 32px));
+  height: min(560px, calc(100vh - 110px));
+  background: #fff;
+  color: #012d5a;
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(1, 45, 90, 0.28);
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  overflow: hidden;
+}
+.chat-panel header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #012d5a;
+  color: #fff;
+}
+.chat-panel header small {
+  display: block;
+  font-size: 11px;
+  opacity: 0.8;
+}
+.chat-panel header button {
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.chat-log {
+  overflow-y: auto;
+  padding: 14px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.chat-turn {
+  max-width: 88%;
+  padding: 9px 12px;
+  border-radius: 14px;
+  overflow-wrap: anywhere;
+}
+.chat-turn--user {
+  justify-self: end;
+  background: #012d5a;
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.chat-turn--assistant {
+  justify-self: start;
+  background: #eef3f8;
+  border-bottom-left-radius: 4px;
+}
+.chat-turn a {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+}
+.chat-welcome p {
+  margin: 0 0 10px;
+}
+.chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chat-suggestions button {
+  border: 1px solid #c5d0e0;
+  background: #fff;
+  color: #012d5a;
+  border-radius: 16px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.chat-panel form {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px 4px;
+  border-top: 1px solid #edf1f5;
+}
+.chat-panel form input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid #c5d0e0;
+  border-radius: 20px;
+  padding: 9px 14px;
+  font: inherit;
+  font-size: 14px;
+}
+.chat-panel form button {
+  border: 0;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  background: #dbb859;
+  color: #012d5a;
+  cursor: pointer;
+}
+.chat-panel form button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.chat-privacy {
+  margin: 0;
+  padding: 2px 14px 10px;
+  font-size: 11px;
+  color: #647181;
+}
+.chat-error {
+  margin: 0;
+  font-size: 13px;
+  color: #9a1c13;
+}
+.chat-typing {
+  display: inline-flex;
+  gap: 4px;
+}
+.chat-typing span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #647181;
+  animation: chat-dot 1s infinite ease-in-out;
+}
+.chat-typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.chat-typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes chat-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-typing span {
+    animation: none;
+  }
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .chat-widget {
+    right: 16px;
+    bottom: 16px;
+  }
+  .chat-launcher span {
+    display: none;
+  }
+}
+/* Customer documents. */
+.document-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+.document-card {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid #e0e6eb;
+  border-radius: 14px;
+  background: #fff;
+}
+.document-card > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+.document-card span {
+  font-size: 13px;
+  color: #647181;
+}
+.document-approved span {
+  color: #12612f;
+  font-weight: 600;
+}
+.document-rejected span {
+  color: #9a1c13;
+  font-weight: 600;
+}
+.document-card small {
+  color: #9a1c13;
+}
+.document-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+}
+.document-actions label.button {
+  cursor: pointer;
+}
+.document-privacy {
+  margin-top: 18px;
+  font-size: 13px;
 }

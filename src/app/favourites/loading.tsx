@@ -1,7 +1,11 @@
 /** Favourites skeleton — account sidebar + page heading + car cards grid */
 export default function Loading() {
   return (
-    <div className="customer-workspace" aria-busy="true" aria-label="Loading favourites">
+    <div
+      className="customer-workspace"
+      aria-busy="true"
+      aria-label="Loading favourites"
+    >
       {/* Sidebar */}
       <aside className="sk-sidebar" aria-hidden="true">
         <div className="skeleton sk-sidebar-logo" />
@@ -20,11 +24,19 @@ export default function Loading() {
 
         {/* Page heading */}
         <div className="skeleton sk-eyebrow" aria-hidden="true" />
-        <div className="skeleton skeleton-title" style={{ width: "42%" }} aria-hidden="true" />
+        <div
+          className="skeleton skeleton-title"
+          style={{ width: "42%" }}
+          aria-hidden="true"
+        />
         <div className="skeleton skeleton-subtitle" aria-hidden="true" />
 
         {/* Car cards */}
-        <div className="loading-card-grid" style={{ marginTop: 32 }} aria-hidden="true">
+        <div
+          className="loading-card-grid"
+          style={{ marginTop: 32 }}
+          aria-hidden="true"
+        >
           {[1, 2, 3, 4].map((n) => (
             <div className="skeleton-panel" key={n}>
               <div className="skeleton skeleton-card-photo" />

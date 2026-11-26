@@ -1,6 +1,11 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  readPricingFields,
+  VehicleCategoryField,
+  VehiclePricingFields,
+} from "./vehicle-pricing-fields";
 export function VehicleCreate() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
@@ -33,6 +38,7 @@ export function VehicleCreate() {
                     seats: Number(f.get("seats")),
                     dailyRate: Math.round(Number(f.get("rate")) * 100),
                     deposit: Math.round(Number(f.get("deposit")) * 100),
+                    ...readPricingFields(f),
                     image: f.get("image"),
                     description: f.get("description"),
                     pickupPoints: String(f.get("pickupPoints"))
@@ -65,15 +71,7 @@ export function VehicleCreate() {
                 placeholder="toyota-camry-01"
               />
             </label>
-            <label>
-              Category
-              <select name="category">
-                <option>Premium SUV</option>
-                <option>Compact SUV</option>
-                <option>Luxury sedan</option>
-                <option>Sedan</option>
-              </select>
-            </label>
+            <VehicleCategoryField />
             <label>
               Seats
               <input
@@ -93,9 +91,10 @@ export function VehicleCreate() {
               Deposit (GHS)
               <input name="deposit" type="number" min="0" step=".01" required />
             </label>
+            <VehiclePricingFields />
             <label>
-              Vehicle image (HTTPS URL)
-              <input name="image" type="url" required />
+              Vehicle image (HTTPS link or /images/… path)
+              <input name="image" required />
             </label>
             <label>
               Description

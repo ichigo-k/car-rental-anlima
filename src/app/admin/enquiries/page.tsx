@@ -1,11 +1,12 @@
 import { session } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { can } from "@/lib/permissions";
 export const dynamic = "force-dynamic";
 export default async function EnquiriesPage() {
   const current = await session();
   if (!current) redirect("/sign-in?next=/admin/enquiries");
-  if (!["ADMIN", "MANAGER", "AGENT"].includes(current.user.role))
+  if (!can(current.user.role, "enquiry.read"))
     return <p>Enquiry access required.</p>;
   const enquiries = await db.contactEnquiry.findMany({
     orderBy: { createdAt: "desc" },

@@ -26,7 +26,9 @@ export function PageState({
           priority
         />
         <div className="page-state-photo-overlay" />
-        <span className="page-state-tagline">ANLIMA · Drive with confidence.</span>
+        <span className="page-state-tagline">
+          ANLIMA · Drive with confidence.
+        </span>
       </div>
 
       <div className="page-state-panel">

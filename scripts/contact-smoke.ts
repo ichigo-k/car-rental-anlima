@@ -2,6 +2,8 @@ import "dotenv/config";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
+import { requireOfflineProviders } from "./offline-providers";
+requireOfflineProviders();
 const db = new PrismaClient();
 const base = process.env.BETTER_AUTH_URL || "http://localhost:3000";
 const email = `contact-smoke-${randomUUID()}@example.com`;

@@ -1,0 +1,340 @@
+/* A finishing layer over the Figma design, loaded last. It keeps the colours,
+   layout and content as designed and only refines rhythm, legibility, motion
+   and interaction states. */
+
+::selection {
+  background: #ddb86566;
+  color: #012d5a;
+}
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+
+/* One visible keyboard focus ring everywhere, in the brand gold. */
+:where(a, button, summary, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid #b18a22;
+  outline-offset: 3px;
+}
+
+/* Buttons: a small lift on hover and a press on click. */
+.button,
+.card-book {
+  transition:
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+.button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px #012d5a24;
+}
+.button:active,
+.card-book:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+.card-book:hover {
+  background: #064478;
+}
+
+/* Header links: a gold underline that grows in, matching the active page. */
+.design-header > nav a {
+  position: relative;
+  padding-block: 6px;
+  transition: color 180ms ease;
+}
+.design-header > nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: #b18a22;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 200ms ease;
+}
+.design-header > nav a:hover::after,
+.design-header > nav a[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+
+/* Mobile menu: a hamburger that turns into a close cross when open. */
+.mobile-nav summary {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  list-style: none;
+  border-radius: 8px;
+}
+.mobile-nav summary::-webkit-details-marker {
+  display: none;
+}
+.hamburger {
+  display: grid;
+  gap: 5px;
+  width: 24px;
+}
+.hamburger span {
+  height: 2.5px;
+  border-radius: 2px;
+  background: currentColor;
+  transition:
+    transform 200ms ease,
+    opacity 200ms ease;
+}
+.mobile-nav[open] .hamburger span:nth-child(1) {
+  transform: translateY(7.5px) rotate(45deg);
+}
+.mobile-nav[open] .hamburger span:nth-child(2) {
+  opacity: 0;
+}
+.mobile-nav[open] .hamburger span:nth-child(3) {
+  transform: translateY(-7.5px) rotate(-45deg);
+}
+
+/* Car cards: a hairline border, a soft lift on hover and a gentle photo zoom. */
+.design-vehicle {
+  border: 1px solid #e6ecf2;
+  box-shadow: 0 3px 14px #012d5a0d;
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+.design-vehicle:hover,
+.design-vehicle:focus-within {
+  border-color: #b18a2266;
+  box-shadow: 0 16px 34px #012d5a17;
+  transform: translateY(-4px);
+}
+.design-vehicle .vehicle-image {
+  overflow: hidden;
+}
+.design-vehicle .vehicle-image img {
+  transition: transform 400ms ease;
+}
+.design-vehicle:hover .vehicle-image img {
+  transform: scale(1.04);
+}
+/* Small card text was 10-11px; lift it to a readable size. */
+.design-vehicle .vehicle-specs,
+.vehicle-type {
+  font-size: 12.5px;
+}
+.vehicle-bottom small {
+  font-size: 12px;
+}
+.card-book {
+  font-size: 12.5px;
+}
+
+/* "Why choose" and value cards: the same quiet hover as car cards. */
+.benefits-list article,
+.anlima-values-grid article,
+.design-step-grid article {
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease;
+}
+.benefits-list article:hover,
+.anlima-values-grid article:hover,
+.design-step-grid article:hover {
+  transform: translateY(-3px);
+}
+.design-step-grid article:hover {
+  box-shadow: 0 18px 36px #00000033;
+}
+.benefit-icon {
+  transition: transform 220ms ease;
+}
+.benefits-list article:hover .benefit-icon {
+  transform: scale(1.06);
+}
+
+/* FAQ: a hover state and a smooth opening answer. */
+.faq-list summary {
+  transition: background-color 180ms ease;
+}
+.faq-list summary:hover {
+  background: #064478;
+}
+.faq-list summary::-webkit-details-marker {
+  display: none;
+}
+.faq-toggle {
+  transition: transform 220ms ease;
+}
+.faq-list details[open] .faq-toggle {
+  transform: rotate(180deg);
+}
+.faq-list details[open] > p {
+  animation: polish-fade-down 240ms ease both;
+}
+.faq-list details > p {
+  line-height: 1.7;
+}
+.design-faq {
+  min-height: 0;
+}
+
+/* Footer: tighter, with link hovers and consistent headings. */
+.design-footer-grid {
+  min-height: 0;
+}
+.design-footer-bottom {
+  padding-top: 32px;
+  margin-top: 48px;
+}
+.design-footer h3 {
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.design-footer-grid > div > a:not(.design-brand),
+.design-footer .footer-tour {
+  width: fit-content;
+  transition:
+    color 180ms ease,
+    transform 180ms ease;
+}
+.design-footer-grid > div > a:not(.design-brand):hover,
+.design-footer .footer-tour:hover {
+  color: #936d0b;
+  transform: translateX(3px);
+}
+
+/* Even vertical rhythm between sections on larger screens. */
+@media (min-width: 761px) {
+  .design-fleet {
+    padding-top: 120px;
+  }
+  .design-steps {
+    margin-bottom: 0;
+  }
+  .design-road {
+    margin-bottom: 0;
+  }
+  .design-faq {
+    padding-top: 100px;
+    padding-bottom: 100px;
+  }
+  .design-footer {
+    padding-top: 72px;
+    padding-bottom: 40px;
+  }
+  .design-catalogue {
+    margin-top: 0;
+  }
+  .design-featured {
+    margin: 0;
+  }
+}
+
+/* Sections ease in as they scroll into view, using the browser's own
+   scroll-driven animations: no script, and browsers without support (or
+   visitors who prefer less motion) simply see the page. The fill only applies
+   before a section enters, so no transform is left on it afterwards. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    main > section:not(:first-child) {
+      animation: polish-rise linear backwards;
+      animation-timeline: view();
+      animation-range: entry 0% entry 30%;
+    }
+  }
+}
+@keyframes polish-rise {
+  from {
+    opacity: 0;
+    translate: 0 28px;
+  }
+}
+@keyframes polish-fade-down {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .card-book,
+  .design-vehicle,
+  .design-vehicle .vehicle-image img,
+  .benefits-list article,
+  .anlima-values-grid article,
+  .design-step-grid article {
+    transition: none;
+  }
+  .button:hover,
+  .design-vehicle:hover,
+  .design-vehicle:focus-within,
+  .benefits-list article:hover,
+  .anlima-values-grid article:hover,
+  .design-step-grid article:hover,
+  .design-vehicle:hover .vehicle-image img {
+    transform: none;
+  }
+  .faq-list details[open] > p {
+    animation: none;
+  }
+}
+
+/* "Send a new code" under SMS code forms. */
+.resend-code {
+  margin: 0;
+  font-size: 13px;
+  color: #647181;
+}
+.resend-code .text-link:disabled {
+  color: #8a96a3;
+  cursor: default;
+  text-decoration: none;
+}
+
+/* Search results page. */
+.search-results {
+  background: #f3f3f9;
+  padding: 48px 0 90px;
+  min-height: 60vh;
+}
+.search-results-heading {
+  margin-bottom: 26px;
+}
+.search-results-heading h1 {
+  color: #012d5a;
+  font-size: clamp(28px, 4vw, 40px);
+  margin: 6px 0 8px;
+}
+.search-results-heading p:not(.eyebrow) {
+  color: #4d5b6a;
+  margin: 0;
+}
+.search-results .fleet-search-panel {
+  margin-bottom: 30px;
+}
+.search-results .filter-tabs {
+  background: transparent;
+  padding: 0;
+}
+.search-results .empty {
+  text-align: center;
+  padding: 50px 20px;
+}
+
+/* Payment choices stack when the payment panel is narrow, so the provider
+   names never run into the card edges. */
+.payment-providers {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.payment-providers strong {
+  overflow-wrap: anywhere;
+}

@@ -11,8 +11,10 @@ export function statusLabel(status: string) {
       {
         PENDING_PAYMENT: "Awaiting payment",
         CONFIRMED: "Confirmed",
-        ACTIVE: "On the road",
-        COMPLETED: "Completed",
+        CHECKED_OUT: "On the road",
+        RETURNED: "Returned",
+        CLOSED: "Closed",
+        NO_SHOW: "No-show",
         CANCELLED: "Cancelled",
         EXPIRED: "Hold expired",
         PAYMENT_REVIEW: "Payment review",

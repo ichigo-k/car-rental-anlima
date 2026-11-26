@@ -3,16 +3,40 @@ import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth";
 import { RentalAction } from "@/components/rental-action";
+import { BookingLifecycle } from "@/components/booking-lifecycle";
 import { money } from "@/lib/catalogue";
 import { bookingStatus, statusLabel } from "@/lib/booking-status";
+import { getFees, cancellationTerms } from "@/lib/fees";
+import { can } from "@/lib/permissions";
+import { documentSummary } from "@/lib/documents";
+const DOC_LABEL = {
+  APPROVED: "approved",
+  PENDING: "to review",
+  REJECTED: "not accepted",
+  INCOMPLETE: "one side missing",
+  MISSING: "not uploaded",
+};
 export const dynamic = "force-dynamic";
+// When a photo was uploaded, and when the device says it was taken if that is
+// more than ten minutes earlier: an old gallery photo stands out.
+function photoTime(uploaded: Date, taken: Date | null) {
+  const at = (d: Date) =>
+    d.toLocaleString("en-GB", {
+      timeZone: "Africa/Accra",
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+  return taken && uploaded.getTime() - taken.getTime() > 10 * 60000
+    ? `Taken ${at(taken)} · uploaded ${at(uploaded)}`
+    : at(uploaded);
+}
 export default async function Reservations({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const current = await requireStaff();
-  if (!["ADMIN", "MANAGER", "AGENT"].includes(current.user.role))
+  if (!can(current.user.role, "booking.read"))
     return (
       <section className="admin-panel">
         <h1>Booking access required.</h1>
@@ -26,8 +50,10 @@ export default async function Reservations({
   const statuses = [
     "PENDING_PAYMENT",
     "CONFIRMED",
-    "ACTIVE",
-    "COMPLETED",
+    "CHECKED_OUT",
+    "RETURNED",
+    "CLOSED",
+    "NO_SHOW",
     "CANCELLED",
     "PAYMENT_REVIEW",
     "EXPIRED",
@@ -45,7 +71,11 @@ export default async function Reservations({
   if (q.window === "pickups")
     conditions.push({ status: "CONFIRMED", pickup: { gte: start, lt: end } });
   if (q.window === "returns")
-    conditions.push({ status: "ACTIVE", returnAt: { lt: end } });
+    conditions.push({ status: "CHECKED_OUT", returnAt: { lt: end } });
+  if (q.window === "cancel-requests")
+    conditions.push({ status: "CONFIRMED", cancelRequestedAt: { not: null } });
+  if (q.window === "to-close")
+    conditions.push({ status: { in: ["RETURNED", "NO_SHOW"] } });
   if (search)
     conditions.push({
       OR: [
@@ -62,19 +92,37 @@ export default async function Reservations({
     Math.min(10000, Number.parseInt(q.page ?? "1", 10) || 1),
   );
   const pageSize = 20;
-  const [bookings, count] = await Promise.all([
-    db.booking.findMany({
-      where,
-      include: {
-        user: { select: { name: true, email: true } },
-        vehicle: true,
-        inspections: true,
-      },
-      orderBy: { createdAt: "desc" },
-      take: pageSize,
-      skip: (page - 1) * pageSize,
+  const [fees, cars, [bookings, count]] = await Promise.all([
+    getFees(db),
+    db.vehicle.findMany({
+      select: { id: true, name: true, status: true },
+      orderBy: { name: "asc" },
     }),
-    db.booking.count({ where }),
+    Promise.all([
+      db.booking.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              name: true,
+              email: true,
+              documents: { select: { kind: true, status: true } },
+            },
+          },
+          vehicle: true,
+          inspections: {
+            orderBy: { createdAt: "asc" },
+            include: { photos: { orderBy: { createdAt: "asc" } } },
+          },
+          charges: { orderBy: { createdAt: "asc" } },
+          changes: { orderBy: { createdAt: "asc" } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: pageSize,
+        skip: (page - 1) * pageSize,
+      }),
+      db.booking.count({ where }),
+    ]),
   ]);
   const pageLink = (n: number) =>
     `/admin/bookings?${new URLSearchParams({ ...(search ? { q: search } : {}), ...(status ? { status } : {}), ...(q.window ? { window: q.window } : {}), page: String(n) })}`;
@@ -118,9 +166,14 @@ export default async function Reservations({
       </form>
       {q.window && (
         <p className="admin-result-count">
-          {q.window === "pickups"
-            ? "Confirmed pickups today"
-            : "Active rentals due back today or overdue"}{" "}
+          {
+            {
+              pickups: "Confirmed pickups today",
+              returns: "Rentals due back today or overdue",
+              "cancel-requests": "Customer cancellation requests",
+              "to-close": "Returned or no-show rentals awaiting closure",
+            }[q.window]
+          }{" "}
           · <Link href="/admin/bookings">Clear date filter</Link>
         </p>
       )}
@@ -164,6 +217,18 @@ export default async function Reservations({
                   {b.ghanaCardLast4 && (
                     <small>Ghana Card ending {b.ghanaCardLast4}</small>
                   )}
+                  {(() => {
+                    const docs = documentSummary(b.user.documents);
+                    return (
+                      <Link
+                        className="doc-line"
+                        href={`/admin/customers?q=${encodeURIComponent(b.user.email)}`}
+                      >
+                        Licence: {DOC_LABEL[docs.licence]} · Ghana Card:{" "}
+                        {DOC_LABEL[docs.id]}
+                      </Link>
+                    );
+                  })()}
                 </div>
                 <div>
                   <h3>Pickup</h3>
@@ -205,26 +270,138 @@ export default async function Reservations({
                   GMT. This car is not confirmed yet.
                 </p>
               )}
+              {b.status === "CONFIRMED" && b.cancelRequestedAt && (
+                <p className="admin-callout">
+                  The customer asked to cancel on{" "}
+                  {b.cancelRequestedAt.toLocaleString("en-GB", {
+                    timeZone: "Africa/Accra",
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                  . Apply the cancellation policy, then cancel the booking.
+                </p>
+              )}
+              {b.status === "CANCELLED" && b.cancellationReason && (
+                <p className="admin-callout subtle">
+                  Cancelled: {b.cancellationReason}
+                </p>
+              )}
               {state === "EXPIRED" && (
                 <p className="admin-callout subtle">
                   The unpaid hold has expired and no longer reserves
                   availability.
                 </p>
               )}
-              {["CONFIRMED", "ACTIVE"].includes(b.status) && (
-                <RentalAction
-                  id={b.id}
-                  kind={b.status === "CONFIRMED" ? "CHECKOUT" : "RETURN"}
-                />
+              {["CONFIRMED", "CHECKED_OUT"].includes(b.status) &&
+                can(current.user.role, "booking.write") && (
+                  <RentalAction
+                    id={b.id}
+                    kind={b.status === "CONFIRMED" ? "CHECKOUT" : "RETURN"}
+                  />
+                )}
+              <BookingLifecycle
+                id={b.id}
+                status={state}
+                role={current.user.role}
+                pickupPassed={b.pickup <= now}
+                deposit={b.deposit}
+                depositApplied={b.depositApplied}
+                presets={{
+                  CLEANING: fees.cleaningFee,
+                  SMOKING: fees.smokingFee,
+                }}
+                cancellation={
+                  b.status === "CONFIRMED"
+                    ? cancellationTerms(fees, b, now)
+                    : null
+                }
+                booking={{
+                  vehicleId: b.vehicleId,
+                  pickup: b.pickup.toISOString(),
+                  returnAt: b.returnAt.toISOString(),
+                }}
+                cars={cars.filter(
+                  (c) => c.status === "AVAILABLE" || c.id === b.vehicleId,
+                )}
+                charges={b.charges.map((c) => ({
+                  id: c.id,
+                  kind: c.kind,
+                  amount: c.amount,
+                  reason: c.reason,
+                  evidence: c.evidence,
+                  status: c.status,
+                }))}
+              />
+              {b.changes.length > 0 && (
+                <details className="admin-inspections">
+                  <summary>Change history ({b.changes.length})</summary>
+                  {b.changes.map((c) => {
+                    const name = (vid: string) =>
+                      cars.find((v) => v.id === vid)?.name ?? "Unknown car";
+                    const at = (d: Date) =>
+                      d.toLocaleString("en-GB", {
+                        timeZone: "Africa/Accra",
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      });
+                    return (
+                      <p key={c.id}>
+                        {at(c.createdAt)}: {name(c.fromVehicleId)},{" "}
+                        {at(c.fromPickup)} to {at(c.fromReturn)} →{" "}
+                        {name(c.toVehicleId)}, {at(c.toPickup)} to{" "}
+                        {at(c.toReturn)}.{" "}
+                        {c.priceDifference > 0
+                          ? `${money(c.priceDifference)} more${c.chargeId ? ", added as a charge" : ", not charged"}.`
+                          : c.priceDifference < 0
+                            ? `${money(-c.priceDifference)} credit owed to the customer.`
+                            : "Same price."}{" "}
+                        Reason: {c.reason}
+                      </p>
+                    );
+                  })}
+                </details>
               )}
               <details className="admin-inspections">
                 <summary>Inspection history ({b.inspections.length})</summary>
                 {b.inspections.length ? (
                   b.inspections.map((i) => (
-                    <p key={i.id}>
-                      {i.kind} · {i.mileage.toLocaleString()} km · {i.fuel} ·{" "}
-                      {i.condition}
-                    </p>
+                    <div key={i.id} className="inspection-record">
+                      <p>
+                        <strong>
+                          {i.kind === "CHECKOUT" ? "Handover" : "Return"}
+                        </strong>{" "}
+                        ·{" "}
+                        {i.createdAt.toLocaleString("en-GB", {
+                          timeZone: "Africa/Accra",
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}{" "}
+                        · {i.mileage.toLocaleString()} km · {i.fuel} ·{" "}
+                        {i.condition}
+                      </p>
+                      {i.photos.length > 0 && (
+                        <ul className="inspection-photo-grid">
+                          {i.photos.map((photo) => (
+                            <li key={photo.id}>
+                              <a
+                                href={`/api/admin/photos/${photo.id}`}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                <img
+                                  src={`/api/admin/photos/${photo.id}`}
+                                  alt={`${i.kind === "CHECKOUT" ? "Handover" : "Return"} photo`}
+                                  loading="lazy"
+                                />
+                              </a>
+                              <small>
+                                {photoTime(photo.createdAt, photo.takenAt)}
+                              </small>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                   ))
                 ) : (
                   <p>No handover or return inspection recorded.</p>

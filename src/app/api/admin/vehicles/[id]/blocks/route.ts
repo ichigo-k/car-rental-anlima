@@ -4,16 +4,14 @@ import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth";
 import { trustedOrigin } from "@/lib/request";
 import { blockingWhere, overlaps } from "@/lib/pricing";
+import { can } from "@/lib/permissions";
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const current = await requireStaff();
-    if (
-      !trustedOrigin(req) ||
-      !["ADMIN", "MANAGER", "FLEET"].includes(current.user.role)
-    )
+    if (!trustedOrigin(req) || !can(current.user.role, "vehicle.write"))
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     const input = z
       .object({

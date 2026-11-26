@@ -1,6 +1,11 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  readPricingFields,
+  VehicleCategoryField,
+  VehiclePricingFields,
+} from "./vehicle-pricing-fields";
 export function FleetEditor({
   car,
 }: {
@@ -15,6 +20,10 @@ export function FleetEditor({
     dailyRate: number;
     deposit: number;
     pickupPoints: string[];
+    driverOption: string;
+    withDriverRate: number | null;
+    dailyKmAllowance: number | null;
+    excessKmFee: number | null;
   };
 }) {
   const [open, setOpen] = useState(false);
@@ -55,6 +64,7 @@ export function FleetEditor({
               status: f.get("status"),
               dailyRate: Math.round(Number(f.get("rate")) * 100),
               deposit: Math.round(Number(f.get("deposit")) * 100),
+              ...readPricingFields(f),
               pickupPoints: String(f.get("pickupPoints"))
                 .split(/\r?\n/)
                 .map((s) => s.trim())
@@ -85,16 +95,7 @@ export function FleetEditor({
             defaultValue={car.name}
           />
         </label>
-        <label>
-          Category
-          <select name="category" defaultValue={car.category}>
-            {["Premium SUV", "Compact SUV", "Luxury sedan", "Sedan"].map(
-              (c) => (
-                <option key={c}>{c}</option>
-              ),
-            )}
-          </select>
-        </label>
+        <VehicleCategoryField value={car.category} />
         <label>
           Seats
           <input
@@ -136,9 +137,10 @@ export function FleetEditor({
             defaultValue={car.deposit / 100}
           />
         </label>
+        <VehiclePricingFields car={car} />
         <label className="wide-field">
-          Vehicle image (HTTPS URL)
-          <input name="image" type="url" required defaultValue={car.image} />
+          Vehicle image (HTTPS link or /images/… path)
+          <input name="image" required defaultValue={car.image} />
         </label>
         <label className="wide-field">
           Description

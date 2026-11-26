@@ -4,6 +4,10 @@ import { session } from "@/lib/auth";
 import Image from "next/image";
 import { AdminNav } from "@/components/admin-nav";
 import { SignOut } from "@/components/sign-out";
+import { can, isStaffRole, ROLE_LABELS } from "@/lib/permissions";
+import type { Metadata } from "next";
+import { privatePage } from "@/lib/seo";
+export const metadata: Metadata = privatePage();
 export default async function AdminLayout({
   children,
 }: {
@@ -11,11 +15,7 @@ export default async function AdminLayout({
 }) {
   const current = await session();
   if (!current) redirect("/sign-in?next=/admin");
-  if (
-    !["ADMIN", "MANAGER", "AGENT", "FLEET", "FINANCE"].includes(
-      current.user.role,
-    )
-  )
+  if (!isStaffRole(current.user.role))
     return (
       <main className="section empty">
         <h1>Staff access required.</h1>
@@ -25,6 +25,83 @@ export default async function AdminLayout({
         </Link>
       </main>
     );
+  if (!current.user.twoFactorEnabled) redirect("/staff-security");
+  const role = current.user.role;
+  const links = [
+    { href: "/admin", label: "Overview", icon: 0 },
+    can(role, "booking.read") && {
+      href: "/admin/bookings",
+      label: "Bookings",
+      icon: 1,
+    },
+    can(role, "booking.read") && {
+      href: "/admin/notifications",
+      label: "Notifications",
+      icon: 5,
+    },
+    { href: "/admin/fleet", label: "Cars & availability", icon: 2 },
+    can(role, "promotion.read") && {
+      href: "/admin/promotions",
+      label: "Promotions & vouchers",
+      icon: 4,
+    },
+    can(role, "gps.view") && {
+      href: "/admin/tracking",
+      label: "Fleet tracking",
+      icon: 3,
+    },
+    can(role, "payment.review") && {
+      href: "/admin/payments",
+      label: "Payments",
+      icon: 4,
+    },
+    can(role, "report.export") && {
+      href: "/admin/reports",
+      label: "Reports",
+      icon: 6,
+    },
+    can(role, "report.export") && {
+      href: "/admin/analytics",
+      label: "Website analytics",
+      icon: 9,
+    },
+    can(role, "customer.read") && {
+      href: "/admin/customers",
+      label: "Customers",
+      icon: 5,
+    },
+    can(role, "enquiry.read") && {
+      href: "/admin/enquiries",
+      label: "Customer enquiries",
+      icon: 5,
+    },
+    can(role, "review.manage") && {
+      href: "/admin/reviews",
+      label: "Reviews",
+      icon: 5,
+    },
+    can(role, "user.manage") && {
+      href: "/admin/staff",
+      label: "Staff & access",
+      icon: 5,
+    },
+    can(role, "settings.manage") && {
+      href: "/admin/settings",
+      label: "Fees & settings",
+      icon: 8,
+    },
+    can(role, "audit.read") && {
+      href: "/admin/audit",
+      label: "Activity history",
+      icon: 6,
+    },
+    can(role, "audit.read") && {
+      href: "/admin/system",
+      label: "System health",
+      icon: 8,
+    },
+    { href: "/", label: "Customer website", icon: 7 },
+  ].filter((link) => !!link);
   return (
     <div className="admin-shell">
       <aside className="sidebar">
@@ -37,56 +114,11 @@ export default async function AdminLayout({
           />
         </Link>
         <p className="workspace-label">STAFF WORKSPACE</p>
-        <AdminNav
-          links={[
-            { href: "/admin", label: "Overview", icon: 0 },
-            ...(["ADMIN", "MANAGER", "AGENT"].includes(current.user.role)
-              ? [{ href: "/admin/bookings", label: "Bookings", icon: 1 }]
-              : []),
-            { href: "/admin/fleet", label: "Cars & availability", icon: 2 },
-            ...(["ADMIN", "MANAGER", "FINANCE"].includes(current.user.role)
-              ? [
-                  {
-                    href: "/admin/promotions",
-                    label: "Promotions & vouchers",
-                    icon: 4,
-                  },
-                ]
-              : []),
-            ...(["ADMIN", "MANAGER", "FLEET"].includes(current.user.role)
-              ? [{ href: "/admin/tracking", label: "Fleet tracking", icon: 3 }]
-              : []),
-            ...(["ADMIN", "MANAGER", "FINANCE"].includes(current.user.role)
-              ? [
-                  {
-                    href: "/admin/payments",
-                    label: "Payments & reports",
-                    icon: 4,
-                  },
-                ]
-              : []),
-            ...(["ADMIN", "MANAGER", "AGENT"].includes(current.user.role)
-              ? [{ href: "/admin/customers", label: "Customers", icon: 5 }]
-              : []),
-            ...(["ADMIN", "MANAGER", "AGENT"].includes(current.user.role)
-              ? [
-                  {
-                    href: "/admin/enquiries",
-                    label: "Customer enquiries",
-                    icon: 5,
-                  },
-                ]
-              : []),
-            ...(["ADMIN", "MANAGER"].includes(current.user.role)
-              ? [{ href: "/admin/audit", label: "Activity history", icon: 6 }]
-              : []),
-            { href: "/", label: "Customer website", icon: 7 },
-          ]}
-        />
+        <AdminNav links={links} />
         <p className="sample-note">
           Signed in as {current.user.name}
           <br />
-          {current.user.role}
+          {ROLE_LABELS[role]}
         </p>
         <SignOut />
       </aside>

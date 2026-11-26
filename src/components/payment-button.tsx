@@ -1,4 +1,5 @@
 "use client";
+import { trackEvent } from "./analytics";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -41,9 +42,13 @@ export function CheckPaymentButton({
                 "Payment is not verified yet. If you have paid, wait a moment and check again.",
               );
             else if (
-              ["CONFIRMED", "ACTIVE", "COMPLETED", "PAYMENT_REVIEW"].includes(
-                result.status,
-              )
+              [
+                "CONFIRMED",
+                "CHECKED_OUT",
+                "RETURNED",
+                "CLOSED",
+                "PAYMENT_REVIEW",
+              ].includes(result.status)
             )
               router.replace(
                 `/bookings?payment=${result.status === "PAYMENT_REVIEW" ? "review" : "verified"}&reference=${encodeURIComponent(reference)}`,
@@ -125,6 +130,7 @@ export function PaymentButton({
         onClick={async () => {
           setBusy(true);
           setError("");
+          trackEvent("checkout-started", { provider });
           try {
             const response = await fetch("/api/payments/checkout", {
               method: "POST",
@@ -147,7 +153,9 @@ export function PaymentButton({
       >
         {busy
           ? "Opening secure checkout..."
-          : `Pay with ${providerName(provider)}`}
+          : enabled
+            ? `Pay with ${providerName(provider)}`
+            : "Payment not available yet"}
       </button>
       {error && (
         <p className="error" role="alert">

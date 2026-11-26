@@ -194,3 +194,148 @@ h2 {
     gap: 30px;
   }
 }
+/* Top navigation, Figma node 33:6. */
+@media (min-width: 1151px) {
+  .design-header,
+  .restored-hero .design-header {
+    gap: 24px;
+  }
+  .design-header > nav,
+  .restored-hero .design-header > nav {
+    margin-inline: auto;
+    gap: clamp(20px, 3.2vw, 64px);
+    white-space: nowrap;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .design-header nav a {
+    color: #012d5a;
+  }
+  .design-header nav a[aria-current="page"] {
+    color: #b18a22;
+  }
+  .design-header .button,
+  .restored-hero .design-header .button {
+    width: 169px;
+    min-height: 50px;
+    padding: 13px 0;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
+/* Sign in / My account beside BOOK A CAR; phones use the Menu instead. */
+.design-header .customer-links .text-link {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.design-header .customer-links .text-link:hover {
+  color: #886619;
+}
+.design-header .header-account .customer-links {
+  font-size: 15px;
+  font-weight: 500;
+  color: #012d5a;
+}
+@media (max-width: 1100px) {
+  .design-header > nav,
+  .design-header .header-account .customer-links {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+}
+@media (min-width: 901px) and (max-width: 1000px) {
+  .design-header,
+  .restored-hero .design-header {
+    padding-inline: 20px;
+    gap: 14px;
+  }
+  .design-header > nav,
+  .restored-hero .design-header > nav {
+    gap: 14px;
+  }
+  .design-header .header-account .customer-links {
+    gap: 12px;
+  }
+  .design-header .button {
+    padding: 12px 18px;
+  }
+}
+@media (max-width: 900px) {
+  .design-header .header-account {
+    display: none;
+  }
+}
+.design-header .mobile-nav .customer-links {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 15px;
+}
+/* Homepage hero. On larger screens the photo fills the hero behind the text;
+   on phones the text comes first, the whole car sits below it, and the
+   search box floats over the bottom of the photo. */
+.restored-hero .design-hero-media {
+  position: absolute;
+  inset: 0;
+}
+@media (max-width: 760px) {
+  .restored-hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    height: auto;
+    min-height: 0;
+    padding-bottom: 28px;
+  }
+  .restored-hero.home-hero::after {
+    display: none;
+  }
+  .restored-hero .design-hero-copy {
+    order: 1;
+    padding: 108px 20px 0;
+  }
+  .restored-hero .design-hero-copy h1 {
+    font-size: 34px;
+    line-height: 1.12;
+    margin-bottom: 12px;
+  }
+  .restored-hero .design-hero-copy p {
+    font-size: 15px;
+    margin-bottom: 18px;
+  }
+  .restored-hero .design-hero-media {
+    order: 2;
+    position: relative;
+    inset: auto;
+    height: min(80vw, 340px);
+    margin-top: 4px;
+  }
+  /* Fade the sky into the page background. */
+  .restored-hero .design-hero-media::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 35%;
+    background: linear-gradient(#eaf5ff, #eaf5ff00);
+    z-index: 1;
+  }
+  .restored-hero.home-hero .design-hero-photo {
+    width: 100% !important;
+    height: 100% !important;
+    left: 0 !important;
+    top: 0 !important;
+    object-fit: cover;
+    object-position: 50% 42%;
+  }
+  .restored-hero .design-hero-search {
+    order: 3;
+    position: relative;
+    inset: auto;
+    margin: -64px 16px 0;
+    z-index: 3;
+  }
+  .restored-hero .design-search {
+    box-shadow: 0 12px 32px #012d5a1f;
+  }
+}

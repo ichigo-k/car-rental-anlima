@@ -1,6 +1,47 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { trackEvent } from "./analytics";
+import { bookingWindowIssue, MIN_NOTICE_HOURS } from "@/lib/pricing";
+// iPhone Safari shows an empty date field as blank, so show a hint until a
+// date is chosen.
+function DateField({
+  name,
+  label,
+  initial,
+}: {
+  name: string;
+  label: string;
+  initial?: string;
+}) {
+  const [filled, setFilled] = useState(!!initial);
+  // Times inside the booking notice cannot be picked. Set after hydration so the server and
+  // browser render the same markup.
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const now = new Date();
+    now.setMinutes(
+      now.getMinutes() - now.getTimezoneOffset() + MIN_NOTICE_HOURS * 60,
+    );
+    if (ref.current) ref.current.min = now.toISOString().slice(0, 16);
+  }, []);
+  return (
+    <div className={filled ? "date-field has-value" : "date-field"}>
+      <input
+        ref={ref}
+        aria-label={label}
+        type="datetime-local"
+        name={name}
+        defaultValue={initial}
+        required
+        onInput={(e) => setFilled(!!e.currentTarget.value)}
+        onChange={(e) => setFilled(!!e.currentTarget.value)}
+      />
+      {/* Text comes from CSS so small phones can show a shorter hint. */}
+      <span className="date-hint" aria-hidden="true" />
+    </div>
+  );
+}
 export function SearchForm({
   initial = {},
 }: {
@@ -26,8 +67,9 @@ export function SearchForm({
           setError("Return must be after pickup.");
           return;
         }
-        if (new Date(start) <= new Date()) {
-          setError("Choose a future pickup date.");
+        const issue = bookingWindowIssue(new Date(start), new Date(end));
+        if (issue) {
+          setError(issue);
           return;
         }
         setError("");
@@ -38,9 +80,11 @@ export function SearchForm({
         });
         const category = String(f.get("category"));
         if (category) params.set("category", category);
-        startTransition(() =>
-          router.push(`/fleet?${params.toString()}#browse`),
-        );
+        trackEvent("search", {
+          category: category || "any",
+          location: String(f.get("location")),
+        });
+        startTransition(() => router.push(`/search?${params.toString()}`));
       }}
     >
       <label>
@@ -64,12 +108,10 @@ export function SearchForm({
         <img src="/images/figma/home-imgLayer1.svg" alt="" />
         <div>
           <span>Pick-up Date</span>
-          <input
-            aria-label="Pick-up date and time"
-            type="datetime-local"
+          <DateField
             name="pickup"
-            defaultValue={initial.pickup}
-            required
+            label="Pick-up date and time"
+            initial={initial.pickup}
           />
         </div>
       </label>
@@ -77,12 +119,10 @@ export function SearchForm({
         <img src="/images/figma/home-imgLayer1.svg" alt="" />
         <div>
           <span>Return Date</span>
-          <input
-            aria-label="Return date and time"
-            type="datetime-local"
+          <DateField
             name="returnAt"
-            defaultValue={initial.returnAt}
-            required
+            label="Return date and time"
+            initial={initial.returnAt}
           />
         </div>
       </label>
@@ -92,10 +132,10 @@ export function SearchForm({
           <span>Car Type</span>
           <select name="category" defaultValue={initial.category || ""}>
             <option value="">Any Type</option>
-            <option value="Sedan">Sedan</option>
+            <option value="Saloon">Saloon</option>
             <option value="SUV">SUV</option>
-            <option value="Luxury">Luxury</option>
-            <option value="Hatchback">Hatchback</option>
+            <option value="Pickup">Pickup</option>
+            <option value="Executive">Executive</option>
           </select>
         </div>
       </label>

@@ -5,6 +5,9 @@ import { VehicleCard } from "@/components/vehicle-card";
 import { session } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { isStaffRole } from "@/lib/auth-redirect";
+import type { Metadata } from "next";
+import { privatePage } from "@/lib/seo";
+export const metadata: Metadata = privatePage("Saved cars");
 export const dynamic = "force-dynamic";
 export default async function Favourites() {
   const current = await session();

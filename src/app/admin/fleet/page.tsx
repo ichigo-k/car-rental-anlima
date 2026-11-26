@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth";
 import { money } from "@/lib/catalogue";
 import { statusLabel } from "@/lib/booking-status";
+import { can } from "@/lib/permissions";
 export const dynamic = "force-dynamic";
 export default async function FleetAdmin({
   searchParams,
@@ -38,7 +39,7 @@ export default async function FleetAdmin({
         .toLowerCase()
         .includes(search.toLowerCase()),
   );
-  const canEdit = ["ADMIN", "MANAGER", "FLEET"].includes(current.user.role);
+  const canEdit = can(current.user.role, "vehicle.write");
   return (
     <>
       <div className="admin-top">
@@ -159,6 +160,10 @@ export default async function FleetAdmin({
                     dailyRate: c.dailyRate,
                     deposit: c.deposit,
                     pickupPoints: c.pickupPoints,
+                    driverOption: c.driverOption,
+                    withDriverRate: c.withDriverRate,
+                    dailyKmAllowance: c.dailyKmAllowance,
+                    excessKmFee: c.excessKmFee,
                   }}
                 />
                 <VehicleBlock id={c.id} />

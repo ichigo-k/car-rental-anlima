@@ -1,6 +1,7 @@
 import { db } from "./db";
 import { blockingWhere, overlaps } from "./pricing";
 import type { PaymentProvider } from "./payment-options";
+import { deliverSoon, queueBookingMessages } from "./notify";
 export type VerifiedCharge = {
   reference: string;
   provider: PaymentProvider;
@@ -21,7 +22,7 @@ export function assertChargeMatches(
     throw new Error("Payment details do not match the reservation.");
 }
 export async function recordVerifiedPayment(charge: VerifiedCharge) {
-  return db.$transaction(async (tx) => {
+  const result = await db.$transaction(async (tx) => {
     const payment = await tx.payment.findUniqueOrThrow({
       where: { reference: charge.reference },
       include: { booking: true },
@@ -77,9 +78,12 @@ export async function recordVerifiedPayment(charge: VerifiedCharge) {
       !["PENDING_PAYMENT", "CONFIRMED"].includes(b.status)
     );
     // A duplicate charge must never release a confirmed or on-road rental.
-    const keepOperationalStatus = ["CONFIRMED", "ACTIVE", "COMPLETED"].includes(
-      b.status,
-    );
+    const keepOperationalStatus = [
+      "CONFIRMED",
+      "CHECKED_OUT",
+      "RETURNED",
+      "CLOSED",
+    ].includes(b.status);
     const status = needsReview
       ? keepOperationalStatus
         ? b.status
@@ -94,6 +98,12 @@ export async function recordVerifiedPayment(charge: VerifiedCharge) {
       },
     });
     await tx.booking.update({ where: { id: b.id }, data: { status } });
+    if (status === "CONFIRMED" || status === "PAYMENT_REVIEW")
+      await queueBookingMessages(
+        tx,
+        b.id,
+        status === "CONFIRMED" ? "BOOKING_CONFIRMED" : "PAYMENT_REVIEW",
+      );
     await tx.auditEvent.create({
       data: {
         actorId: charge.provider,
@@ -106,4 +116,6 @@ export async function recordVerifiedPayment(charge: VerifiedCharge) {
     });
     return { reference: b.reference, status, review: needsReview };
   });
+  deliverSoon();
+  return result;
 }

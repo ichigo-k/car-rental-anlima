@@ -1,9 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AccountLinks } from "./favourites";
+import { StartTourButton } from "./booking-tour";
 const links = [
   ["/", "Home"],
   ["/fleet", "Cars"],
+  ["/how-it-works", "How It Works"],
   ["/about", "About Us"],
   ["/contact", "Contact"],
 ];
@@ -39,17 +41,25 @@ export function Header({
         ))}
       </nav>
       <details className="mobile-nav">
-        <summary>Menu</summary>
+        <summary aria-label="Menu">
+          <span className="hamburger" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </span>
+        </summary>
         <nav aria-label="Mobile navigation">
           {links.map(([href, label]) => (
             <Link href={href} key={label}>
               {label}
             </Link>
           ))}
-          <Link href="/auth/continue">My account</Link>
+          <AccountLinks />
         </nav>
       </details>
-      <AccountLinks />
+      <div className="header-account">
+        <AccountLinks />
+      </div>
       <Link href="/fleet#browse" className="button small">
         BOOK A CAR
       </Link>
@@ -85,11 +95,13 @@ export function Footer() {
         </div>
         <div>
           <h3>YOUR JOURNEY</h3>
-          <Link href="/how-it-works">How It Works</Link>
+          <StartTourButton className="text-link footer-tour">
+            How to book (guided tour)
+          </StartTourButton>
+          <Link href="/favourites">Saved cars</Link>
           <Link href="/bookings">My bookings</Link>
           <Link href="/policies">Rental guide</Link>
           <span>Accra, Ghana</span>
-          <Link href="/admin">Staff workspace</Link>
         </div>
         <div>
           <h3>Legal</h3>

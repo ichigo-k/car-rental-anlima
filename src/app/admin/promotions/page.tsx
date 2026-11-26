@@ -2,10 +2,11 @@ import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth";
 import { PromotionEditor } from "@/components/promotion-editor";
 import { money } from "@/lib/catalogue";
+import { can } from "@/lib/permissions";
 export const dynamic = "force-dynamic";
 export default async function Promotions() {
   const current = await requireStaff();
-  if (!["ADMIN", "MANAGER", "FINANCE"].includes(current.user.role))
+  if (!can(current.user.role, "promotion.read"))
     return (
       <section className="admin-panel">
         <h1>Promotion access required.</h1>
@@ -25,8 +26,10 @@ export default async function Promotions() {
                     status: {
                       in: [
                         "CONFIRMED",
-                        "ACTIVE",
-                        "COMPLETED",
+                        "CHECKED_OUT",
+                        "RETURNED",
+                        "CLOSED",
+                        "NO_SHOW",
                         "PAYMENT_REVIEW",
                       ],
                     },
@@ -44,7 +47,7 @@ export default async function Promotions() {
       orderBy: { name: "asc" },
     }),
   ]);
-  const canEdit = ["ADMIN", "MANAGER"].includes(current.user.role);
+  const canEdit = can(current.user.role, "promotion.manage");
   return (
     <>
       <div className="admin-top">

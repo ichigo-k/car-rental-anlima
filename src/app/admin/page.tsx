@@ -3,33 +3,49 @@ import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth";
 import { money } from "@/lib/catalogue";
 import { bookingStatus, statusLabel } from "@/lib/booking-status";
+import { can } from "@/lib/permissions";
 export const dynamic = "force-dynamic";
 export default async function Admin() {
   const current = await requireStaff();
   const now = new Date();
   const start = new Date(now.toISOString().slice(0, 10) + "T00:00:00Z");
   const end = new Date(start.getTime() + 86400000);
-  const canBookings = ["ADMIN", "MANAGER", "AGENT"].includes(current.user.role);
-  const [ready, active, pickups, returns, pending, review, recent] =
-    await Promise.all([
-      db.vehicle.count({ where: { status: "AVAILABLE" } }),
-      db.booking.count({ where: { status: "ACTIVE" } }),
-      db.booking.count({
-        where: { status: "CONFIRMED", pickup: { gte: start, lt: end } },
-      }),
-      db.booking.count({ where: { status: "ACTIVE", returnAt: { lt: end } } }),
-      db.booking.count({
-        where: { status: "PENDING_PAYMENT", holdExpiresAt: { gt: now } },
-      }),
-      db.booking.count({ where: { status: "PAYMENT_REVIEW" } }),
-      canBookings
-        ? db.booking.findMany({
-            take: 8,
-            orderBy: { createdAt: "desc" },
-            include: { vehicle: true, user: { select: { name: true } } },
-          })
-        : Promise.resolve([]),
-    ]);
+  const canBookings = can(current.user.role, "booking.read");
+  const [
+    ready,
+    active,
+    pickups,
+    returns,
+    pending,
+    review,
+    cancelRequests,
+    toClose,
+    recent,
+  ] = await Promise.all([
+    db.vehicle.count({ where: { status: "AVAILABLE" } }),
+    db.booking.count({ where: { status: "CHECKED_OUT" } }),
+    db.booking.count({
+      where: { status: "CONFIRMED", pickup: { gte: start, lt: end } },
+    }),
+    db.booking.count({
+      where: { status: "CHECKED_OUT", returnAt: { lt: end } },
+    }),
+    db.booking.count({
+      where: { status: "PENDING_PAYMENT", holdExpiresAt: { gt: now } },
+    }),
+    db.booking.count({ where: { status: "PAYMENT_REVIEW" } }),
+    db.booking.count({
+      where: { status: "CONFIRMED", cancelRequestedAt: { not: null } },
+    }),
+    db.booking.count({ where: { status: { in: ["RETURNED", "NO_SHOW"] } } }),
+    canBookings
+      ? db.booking.findMany({
+          take: 8,
+          orderBy: { createdAt: "desc" },
+          include: { vehicle: true, user: { select: { name: true } } },
+        })
+      : Promise.resolve([]),
+  ]);
   return (
     <>
       <div className="admin-top">
@@ -45,7 +61,7 @@ export default async function Admin() {
       <div className="stats">
         {[
           ["Available in catalogue", ready, "/admin/fleet?status=AVAILABLE"],
-          ["On the road", active, "/admin/bookings?status=ACTIVE"],
+          ["On the road", active, "/admin/bookings?status=CHECKED_OUT"],
           ["Pickups today", pickups, "/admin/bookings?window=pickups"],
           ["Returns due / overdue", returns, "/admin/bookings?window=returns"],
         ].map(([label, value, href]) => (
@@ -87,6 +103,28 @@ export default async function Admin() {
             <Link href="/admin/bookings?status=PAYMENT_REVIEW">
               Review bookings →
             </Link>
+          )}
+        </div>
+        <div>
+          <span className="admin-attention-number">{cancelRequests}</span>
+          <div>
+            <h2>Cancellation requests</h2>
+            <p>Paid bookings the customer has asked to cancel.</p>
+          </div>
+          {canBookings && (
+            <Link href="/admin/bookings?window=cancel-requests">
+              View requests →
+            </Link>
+          )}
+        </div>
+        <div>
+          <span className="admin-attention-number">{toClose}</span>
+          <div>
+            <h2>Rentals to close</h2>
+            <p>Decide charges and settle the deposit.</p>
+          </div>
+          {canBookings && (
+            <Link href="/admin/bookings?window=to-close">Settle rentals →</Link>
           )}
         </div>
       </div>
